@@ -84,11 +84,9 @@ class Environment():
         if observation["Target_y"] != "CORRECT":
             if observation["Face"] != "UP":
                 if self.action_mapping[action] != ["TURN_RIGHT"]:
-                    reward -= 100              
-                    print("--",self.action_mapping[action])
+                    reward -= 100                                  
                 else:
-                    reward += 10
-                    print("++")
+                    reward += 10                    
             elif observation["Target_y"] ==  "DOWN":
                 if self.action_mapping[action] != ["FORWARD"]:
                     reward -= 10
@@ -119,7 +117,7 @@ class Environment():
         
             
 
-        print(f"reward: {reward:5d} obs: {observation} action: {self.action_mapping[action]}")
+        # print(f"reward: {reward:5d} obs: {observation} action: {self.action_mapping[action]}")
 
         return reward
 
