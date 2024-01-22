@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 class Environment():
     def __init__(self) -> None:                                                                        
-        self.action_mapping = [["NONE"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"], ["AIM_LEFT"], ["AIM_RIGHT"], ["SHOOT"]]
+        self.action_mapping = [["NONE"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]
         self.n_actions = len(self.action_mapping)
         
         self.action = 0 
@@ -55,42 +55,69 @@ class Environment():
         return observation, reward, done, info
     
     def __get_obs(self, scene_info):      
-        FaceToUp = 0                 
-        if scene_info["angle"] == 0:
-            FaceToUp = "LEFT"       
-        elif scene_info["angle"] == 45:     
-            FaceToUp = "DOWNLEFT"
-        elif scene_info["angle"] == 90:
-            FaceToUp = "DOWN"
-        elif scene_info["angle"] == 135:
-            FaceToUp = "DOWNRIGHT"
-        elif scene_info["angle"] == 180:
-            FaceToUp = "RIGHT"
-        elif scene_info["angle"] == 225:
-            FaceToUp = "UPRIGHT"
-        elif scene_info["angle"] == 270:
-            FaceToUp = "UP"
-        elif scene_info["angle"] == 315:
-            FaceToUp = "UPLEFT"
 
-        observation = {"FaceToUp": FaceToUp}
+        FaceMap = { 0: "LEFT" ,45: "DOWNLEFT" ,90: "DOWN" ,135:"DOWNRIGHT"
+                   ,180:"RIGHT" ,225:"UPRIGHT" ,270:"UP" ,315:"UPLEFT"}
+
+        if abs(scene_info["competitor_info"][0]["x"] - scene_info["x"]) < 8:
+            Target_x = "CORRECT"
+        elif scene_info["competitor_info"][0]["x"] - scene_info["x"] > 0:
+            Target_x = "LEFT"
+        else:
+            Target_x = "UP"
+        
+        if abs(scene_info["competitor_info"][0]["y"] - scene_info["y"]) < 8:
+            Target_y = "CORRECT"
+        elif scene_info["competitor_info"][0]["y"] - scene_info["y"] > 0:
+            Target_y = "UP"
+        else:
+            Target_y = "DOWN"
+        
+        observation = {"Face": FaceMap[abs(scene_info["angle"])], "Target_x": Target_x, "Target_y": Target_y}
             
         return observation
         
         
     
-    def __get_reward(self, action: int , observation: int):
+    def __get_reward(self, action: int , observation: int):        
         reward = 0
-        if observation["FaceToUp"] != "UP":
-            if self.action_mapping[action] == "TURN_RIGHT" :
-                reward += 10
+        if observation["Target_y"] != "CORRECT":
+            if observation["Face"] != "UP":
+                if self.action_mapping[action] != ["TURN_RIGHT"]:
+                    reward -= 100              
+                    print("--",self.action_mapping[action])
+                else:
+                    reward += 10
+                    print("++")
+            elif observation["Target_y"] ==  "DOWN":
+                if self.action_mapping[action] != ["FORWARD"]:
+                    reward -= 10
+                else:
+                    reward += 10
             else:
-                reward -= 100
-        elif observation["FaceToUp"] == "UP":
-            if self.action_mapping[action] == "TURN_RIGHT":
-                reward -= 100
+                if self.action_mapping[action] != ["BACKWARD"]:
+                    reward -= 10
+                else:
+                    reward += 10
+        
+        elif observation["Target_x"] != "CORRECT":
+            if observation["Face"] != "LEFT":
+                if self.action_mapping[action] != ["TURN_RIGHT"]:
+                    reward -= 100
+                else:
+                    reward += 10
+            elif observation["Target_x"] ==  "RIGHT":                
+                if self.action_mapping[action] != ["FORWARD"]:
+                    reward -= 10
+                else:
+                    reward += 100
             else:
-                reward += 100
+                if self.action_mapping[action] != ["BACKWARD"]:
+                    reward -= 10
+                else:
+                    reward += 100
+        
+            
 
         print(f"reward: {reward:5d} obs: {observation} action: {self.action_mapping[action]}")
 
