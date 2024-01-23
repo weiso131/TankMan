@@ -64,7 +64,7 @@ class Environment():
         elif scene_info["competitor_info"][0]["x"] - scene_info["x"] > 0:
             Target_x = "LEFT"
         else:
-            Target_x = "UP"
+            Target_x = "Right"
         
         if abs(scene_info["competitor_info"][0]["y"] - scene_info["y"]) < 8:
             Target_y = "CORRECT"
