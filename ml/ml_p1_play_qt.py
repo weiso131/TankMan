@@ -3,14 +3,16 @@ The template of the main script of the machine learning process
 """
 import pygame
 import os
+import sys
 import pickle
 from datetime import datetime
 import numpy as np
-from ml.Environment import Environment as env
-from ml.QT import QLearningTable
 import pandas as pd
 import math
-from ml.env import *
+sys.path.append(os.path.dirname(__file__))
+from env import *
+from p1_Environment import Environment as env
+from QT import QLearningTable
 
 
 class MLPlay:
@@ -30,18 +32,16 @@ class MLPlay:
         self.state = [self.env.observation]    
         self.state_ = [self.env.observation]         
 
-        self.QT = QLearningTable(actions=list(range(self.env.n_actions)))
+        self.QT = QLearningTable(actions=list(range(self.env.n_actions)), e_greedy=0)
         
         folder_path = './ml/save'
         os.makedirs(folder_path, exist_ok=True)
 
-        keep_training = False
-        if keep_training:
-            self.QT.q_table =pd.read_pickle('.\\ml\\save\\qtable.pickle')
-        else:
-            self.QT.q_table.to_pickle('.\\ml\\save\\qtable.pickle')
+        
+        self.QT.q_table = pd.read_pickle('.\\ml\\save\\p1_qtable.pickle')
+        
 
-        self.action_mapping = [["NONE"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]            
+        self.action_mapping = [["NONE"], ["TURN_LEFT"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]
          
 
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
@@ -60,7 +60,6 @@ class MLPlay:
         self.state_ = [observation]
         action = self.QT.choose_action(str(self.state))
         
-        self.QT.learn(str(self.state), self.action, reward, str(self.state_))
 
 
         self.state = self.state_
@@ -80,7 +79,7 @@ class MLPlay:
         Reset the status
         """
         print(f"reset Game {self.side}")
-        self.QT.q_table.to_pickle('.\\ml\\save\\qtable.pickle')
+        
 
     def is_wall_in_bullet_range(self, tank_pos, gun_angle, walls, detection_distance):
         for wall in walls:            
@@ -97,10 +96,10 @@ class MLPlay:
         if detection_distance < distance:
             return False
         
-        angle_rad = math.atan2(target_pos["y"] - tank_pos["y"], target_pos["x"] - tank_pos["x"])            
-        gun_rad = np.radians(180 - gun_angle) 
+        angle_rad = abs(math.atan2(target_pos["y"] - tank_pos["y"], target_pos["x"] - tank_pos["x"]))
+        gun_rad = abs(np.radians(180 - gun_angle) )
         toarance_rad = math.atan2(WALL_WIDTH/2, distance)
-        
-        
+                
+
         return abs(gun_rad - angle_rad) < toarance_rad   
     

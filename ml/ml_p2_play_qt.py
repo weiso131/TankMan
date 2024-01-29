@@ -6,7 +6,7 @@ import os
 import pickle
 from datetime import datetime
 import numpy as np
-from ml.Environment import Environment as env
+from ml.p2_Environment import Environment as env
 from ml.QT import QLearningTable
 import pandas as pd
 import math
@@ -30,13 +30,13 @@ class MLPlay:
         self.state = [self.env.observation]    
         self.state_ = [self.env.observation]         
 
-        self.QT = QLearningTable(actions=list(range(self.env.n_actions)))
+        self.QT = QLearningTable(actions=list(range(self.env.n_actions)), e_greedy=0)
         
         folder_path = './ml/save'
         os.makedirs(folder_path, exist_ok=True)
 
         
-        self.QT.q_table =pd.read_pickle('.\\ml\\save\\qtable.pickle')
+        self.QT.q_table = pd.read_pickle('.\\ml\\save\\p2_qtable.pickle')
         
 
         self.action_mapping = [["NONE"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]            
@@ -77,7 +77,7 @@ class MLPlay:
         Reset the status
         """
         print(f"reset Game {self.side}")
-        self.QT.q_table.to_pickle('.\\ml\\save\\qtable.pickle')
+        
 
     def is_wall_in_bullet_range(self, tank_pos, gun_angle, walls, detection_distance):
         for wall in walls:            
