@@ -3,14 +3,16 @@ The template of the main script of the machine learning process
 """
 import pygame
 import os
+import sys
 import pickle
 from datetime import datetime
 import numpy as np
-from ml.p2_Environment import Environment as env
-from ml.QT import QLearningTable
 import pandas as pd
 import math
-from ml.env import *
+sys.path.append(os.path.dirname(__file__))
+from env import *
+from p2_Environment import Environment as env
+from QT import QLearningTable
 
 
 class MLPlay:
@@ -35,7 +37,7 @@ class MLPlay:
         folder_path = './ml/save'
         os.makedirs(folder_path, exist_ok=True)
 
-        keep_training = False
+        keep_training = True
         if keep_training:
             self.QT.q_table =pd.read_pickle('.\\ml\\save\\p2_qtable.pickle')
         else:
@@ -48,7 +50,7 @@ class MLPlay:
         """
         Generate the command according to the received scene information
         """
-        
+
         
         if scene_info["status"] != "GAME_ALIVE":            
             return "RESET"
@@ -58,7 +60,7 @@ class MLPlay:
 
 
         self.state_ = [observation]
-        action = self.QT.choose_action(str(self.state))
+        action = self.QT.choose_action(str(self.state_))
         
         self.QT.learn(str(self.state), self.action, reward, str(self.state_))
 

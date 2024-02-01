@@ -7,7 +7,7 @@ class Environment():
         self.n_actions = len(self.action_mapping)
         
         self.action = 0 
-        self.observation = 0
+        self.observation = {"Face": "LEFT", "Target_x": "CORRECT", "Target_y": "CORRECT"}
         self.pre_reward = 0
     
     def set_scene_info(self, Scene_info: dict):
@@ -46,11 +46,12 @@ class Environment():
         reward = 0
         observation = self.__get_obs(self.scene_info)                  
         
-        reward = self.__get_reward(action, observation)
+        reward = self.__get_reward(action, self.observation)
                 
         done = self.scene_info["status"] != "GAME_ALIVE"            
 
         info = {}
+        self.observation = observation
 
         return observation, reward, done, info
     
@@ -88,10 +89,10 @@ class Environment():
                 else:
                     reward += 10                    
             elif observation["Target_y"] ==  "DOWN":
-                if self.action_mapping[action] != ["FORWARD"]:
+                if self.action_mapping[action] != ["FORWARD"]:                    
                     reward -= 100
-                else:
-                    reward += 10
+                else:                    
+                    reward += 10                    
             else:
                 if self.action_mapping[action] != ["BACKWARD"]:
                     reward -= 100

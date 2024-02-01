@@ -34,11 +34,11 @@ class MLPlay:
 
         self.QT = QLearningTable(actions=list(range(self.env.n_actions)), e_greedy=0)
         
-        folder_path = './ml/save'
-        os.makedirs(folder_path, exist_ok=True)
-
+        folder_path = os.path.dirname(__file__) + '/save'
+              
         
-        self.QT.q_table = pd.read_pickle('.\\ml\\save\\p1_qtable.pickle')
+        
+        self.QT.q_table = pd.read_pickle(folder_path+'/p1_qtable.pickle')
         
 
         self.action_mapping = [["NONE"], ["TURN_LEFT"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]

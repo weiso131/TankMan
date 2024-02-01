@@ -31,7 +31,7 @@ class MLPlay:
         if scene_info["status"] != "GAME_ALIVE":
             # print(scene_info)
             return "RESET"
-
+        
         command = []
         if self.side == "1P":
             if pygame.K_RIGHT in keyboard:

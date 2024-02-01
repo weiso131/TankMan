@@ -3,11 +3,11 @@ from collections import OrderedDict
 
 class Environment():
     def __init__(self) -> None:                                                                        
-        self.action_mapping = [["NONE"], ["TURN_LEFT"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]
+        self.action_mapping = [["NONE"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]
         self.n_actions = len(self.action_mapping)
         
         self.action = 0 
-        self.observation = 0
+        self.observation = {"Face": "LEFT", "Target_x": "CORRECT", "Target_y": "CORRECT"}
         self.pre_reward = 0
     
     def set_scene_info(self, Scene_info: dict):
@@ -46,18 +46,19 @@ class Environment():
         reward = 0
         observation = self.__get_obs(self.scene_info)                  
         
-        reward = self.__get_reward(action, observation)
+        reward = self.__get_reward(action, self.observation)
                 
         done = self.scene_info["status"] != "GAME_ALIVE"            
 
         info = {}
+        self.observation = observation
 
         return observation, reward, done, info
     
     def __get_obs(self, scene_info):      
 
         FaceMap = { 0: "LEFT" ,45: "DOWNLEFT" ,90: "DOWN" ,135:"DOWNRIGHT"
-                   ,180:"RIGHT" ,225:"UPRIGHT" ,270:"UP" ,315:"UPLEFT", 360: "LEFT"}
+                   ,180:"RIGHT" ,225:"UPRIGHT" ,270:"UP" ,315:"UPLEFT"}
 
         if abs(scene_info["competitor_info"][0]["x"] - scene_info["x"]) < 8:
             Target_x = "CORRECT"
@@ -88,10 +89,10 @@ class Environment():
                 else:
                     reward += 10                    
             elif observation["Target_y"] ==  "DOWN":
-                if self.action_mapping[action] != ["FORWARD"]:
+                if self.action_mapping[action] != ["FORWARD"]:                    
                     reward -= 100
-                else:
-                    reward += 10
+                else:                    
+                    reward += 10                    
             else:
                 if self.action_mapping[action] != ["BACKWARD"]:
                     reward -= 100
@@ -108,11 +109,11 @@ class Environment():
                 if self.action_mapping[action] != ["FORWARD"]:
                     reward -= 10
                 else:
-                    reward += 100                    
+                    reward += 100
             else:
                 if self.action_mapping[action] != ["BACKWARD"]:
                     reward -= 10
-                else:                    
+                else:
                     reward += 100
         
             

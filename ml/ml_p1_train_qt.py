@@ -3,16 +3,16 @@ The template of the main script of the machine learning process
 """
 import pygame
 import os
+import sys 
 import pickle
 from datetime import datetime
 import numpy as np
 import pandas as pd
 import math
-import sys 
 sys.path.append(os.path.dirname(__file__))
+from env import *
 from p1_Environment import Environment as env
 from QT import QLearningTable
-from env import *
 
 
 class MLPlay:
@@ -37,7 +37,7 @@ class MLPlay:
         folder_path = './ml/save'
         os.makedirs(folder_path, exist_ok=True)
 
-        keep_training = False
+        keep_training = True
         if keep_training:
             self.QT.q_table =pd.read_pickle('.\\ml\\save\\p1_qtable.pickle')
         else:

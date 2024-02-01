@@ -3,14 +3,16 @@ The template of the main script of the machine learning process
 """
 import pygame
 import os
+import sys
 import pickle
 from datetime import datetime
 import numpy as np
-from ml.p2_Environment import Environment as env
-from ml.QT import QLearningTable
 import pandas as pd
 import math
-from ml.env import *
+sys.path.append(os.path.dirname(__file__))
+from env import *
+from p2_Environment import Environment as env
+from QT import QLearningTable
 
 
 class MLPlay:
@@ -32,11 +34,11 @@ class MLPlay:
 
         self.QT = QLearningTable(actions=list(range(self.env.n_actions)), e_greedy=0)
         
-        folder_path = './ml/save'
-        os.makedirs(folder_path, exist_ok=True)
+        folder_path = os.path.dirname(__file__) + '/save'
+        
 
         
-        self.QT.q_table = pd.read_pickle('.\\ml\\save\\p2_qtable.pickle')
+        self.QT.q_table = pd.read_pickle(folder_path+'/p2_qtable.pickle')
         
 
         self.action_mapping = [["NONE"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]            
@@ -56,7 +58,7 @@ class MLPlay:
 
 
         self.state_ = [observation]
-        action = self.QT.choose_action(str(self.state))
+        action = self.QT.choose_action(str(self.state_))
         
 
 
@@ -64,11 +66,11 @@ class MLPlay:
         self.action = action           
         command = self.action_mapping[action]
 
-        is_wall_in_bullet_range = self.is_wall_in_bullet_range({"x": scene_info["x"], "y": scene_info["y"]}, scene_info["gun_angle"], scene_info["walls_info"], 50)
-        
-        is_target_in_bullet_range = self.is_target_in_bullet_range({"x": scene_info["x"], "y": scene_info["y"]}, scene_info["gun_angle"], {"x":scene_info["competitor_info"][0]["x"], "y":scene_info["competitor_info"][0]["y"]}, BULLET_TRAVEL_DISTANCE)
-        if is_wall_in_bullet_range or is_target_in_bullet_range:
-            command = ["SHOOT"]
+        # is_wall_in_bullet_range = self.is_wall_in_bullet_range({"x": scene_info["x"], "y": scene_info["y"]}, scene_info["gun_angle"], scene_info["walls_info"], 50)
+        # 
+        # is_target_in_bullet_range = self.is_target_in_bullet_range({"x": scene_info["x"], "y": scene_info["y"]}, scene_info["gun_angle"], {"x":scene_info["competitor_info"][0]["x"], "y":scene_info["competitor_info"][0]["y"]}, BULLET_TRAVEL_DISTANCE)
+        # if is_wall_in_bullet_range or is_target_in_bullet_range:
+        #     command = ["SHOOT"]
         return command
 
 
