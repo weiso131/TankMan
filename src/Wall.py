@@ -3,7 +3,7 @@ from os import path
 import pygame
 from mlgame.view.view_model import create_asset_init_data, create_image_view_data
 
-from .env import IMAGE_DIR
+from .env import IMAGE_DIR, WALL_LIVE
 
 
 class Wall(pygame.sprite.Sprite):
@@ -14,7 +14,7 @@ class Wall(pygame.sprite.Sprite):
         self.rect = pygame.Rect(construction["_init_pos"], construction["_init_size"])
         self.angle = 0
         self.is_alive = True
-        self.lives = 3
+        self.lives = WALL_LIVE
 
     def update(self, *args, **kwargs) -> None:
         if self.lives <= 0:
@@ -34,8 +34,8 @@ class Wall(pygame.sprite.Sprite):
 
     def get_obj_init_data(self):
         image_init_data = []
-        for i in range(1, 4):
+        for i in range(1, self.lives+1):
             image_init_data.append(create_asset_init_data(f"wall_{i}", self.rect.width, self.rect.height,
-                                                          path.join(IMAGE_DIR, f"wall_{i}.png"),
-                                                          f"https://raw.githubusercontent.com/Jesse-Jumbo/TankMan/main/asset/image/wall_{i}.png"))
+                                                          path.join(IMAGE_DIR, f"wall_{min(i,3)}.png"),
+                                                          f"https://raw.githubusercontent.com/Jesse-Jumbo/TankMan/main/asset/image/wall_{min(i,3)}.png"))
         return image_init_data
