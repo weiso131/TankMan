@@ -3,7 +3,8 @@ from os import path
 import pygame
 from mlgame.view.view_model import create_asset_init_data, create_image_view_data
 
-from .env import WINDOW_HEIGHT, WINDOW_WIDTH, IMAGE_DIR
+from .env import WINDOW_HEIGHT, WINDOW_WIDTH, IMAGE_DIR, BULLET_SIZE
+
 
 Vec = pygame.math.Vector2
 
@@ -17,7 +18,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.center = construction["_init_pos"]
         self.rot = kwargs["rot"]
         self.play_rect_area = kwargs["play_rect_area"]
-        self.speed = 10
+        self.speed = kwargs["bullet_speed"] * construction["_init_size"][0] / BULLET_SIZE[0]
         self.map_width = WINDOW_WIDTH
         self.map_height = WINDOW_HEIGHT
         self.angle = 3.14 / 180 * (self.rot + 90)
@@ -29,14 +30,21 @@ class Bullet(pygame.sprite.Sprite):
                      "left": Vec(-self.speed, 0), "right": Vec(self.speed, 0), "up": Vec(0, -self.speed),
                      "down": Vec(0, self.speed)}
 
+        # assert kwargs["bullet_travel_distance"] % self.speed == 0, "bullet_travel_distance must be a multiple of bullet_speed"
+
+        self.max_travel_distance = kwargs["bullet_travel_distance"] * construction["_init_size"][0] / BULLET_SIZE[0]
+        self.travel_distance = 0
+
     def update(self):
+        self.travel_distance += self.speed
+
         if self.play_rect_area.top < self.rect.centery < self.play_rect_area.bottom \
                 and self.play_rect_area.left < self.rect.centerx < self.play_rect_area.right:
             is_out = False
         else:
             is_out = True
 
-        if is_out:
+        if is_out or self.travel_distance >= self.max_travel_distance:
             self.kill()
 
         if self.rot == 0 or self.rot == 360:
@@ -62,7 +70,7 @@ class Bullet(pygame.sprite.Sprite):
                                       self.angle)
 
     def get_data_from_obj_to_game(self) -> dict:
-        info = {"id": f"{self.id}P_bullet",
+        info = {"id": f"{self.no}P_bullet",
                 "x": self.rect.x,
                 "y": self.rect.y,
                 "speed": self.speed,

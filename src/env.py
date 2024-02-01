@@ -2,6 +2,7 @@ from os import path
 
 import pygame
 
+IS_DEBUG = False
 # TODO remove width and height setting
 '''width and height'''
 WINDOW_WIDTH = 1000
@@ -9,7 +10,7 @@ WINDOW_HEIGHT = 700
 
 '''environment data'''
 FPS = 30
-SHOOT_COOLDOWN = FPS // 4
+SHOOT_COOLDOWN = 15
 
 '''color'''
 BLACK = "#000000"
@@ -32,10 +33,12 @@ MEDGRAY = "#4B4B4B"
 ORANGE =  "#FFA500"
 
 '''command'''
-LEFT_CMD = "TURN_LEFT"
-RIGHT_CMD = "TURN_RIGHT"
+TURN_LEFT_CMD = "TURN_LEFT"
+TURN_RIGHT_CMD = "TURN_RIGHT"
 FORWARD_CMD = "FORWARD"
 BACKWARD_CMD = "BACKWARD"
+AIM_LEFT_CMD = "AIM_LEFT"
+AIM_RIGHT_CMD = "AIM_RIGHT"
 SHOOT = "SHOOT"
 
 '''data path'''
