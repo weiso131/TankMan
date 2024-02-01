@@ -18,6 +18,7 @@ from .Wall import Wall
 from .collide_hit_rect import *
 from .env import *
 from .game_module.fuctions import set_topleft, add_score, set_shoot
+from .GenerateMap import MapGenerator
 
 
 class TeamBattleMode:
@@ -29,12 +30,16 @@ class TeamBattleMode:
         self.blue_team_num = blue_team_num if (6 - (green_team_num + blue_team_num)) >= 0 else (6 - green_team_num)
         self.map_name = f"map_{green_team_num}_v_{self.blue_team_num}.tmx" if not IS_DEBUG else f"test_map_{green_team_num}_v_{self.blue_team_num}.tmx"
         self.map_path = path.join(MAP_DIR, self.map_name)
+        self.map_generator = MapGenerator(self.green_team_num, self.blue_team_num, 40, 24)
+        self.tileSize = self.map_generator.getTileSize()
+        self.size_multiplier = self.tileSize / 50
+        self.map_generator.generate_map()
         self.map = TiledMap(self.map_path)
-        self.scene_width = self.map.map_width
-        self.scene_height = self.map.map_height + 100
+        self.scene_width, self.scene_height = self.map_generator.getScreeenSize()
         self.width_center = self.scene_width // 2
         self.height_center = self.scene_height // 2
         self.play_rect_area = play_rect_area
+        self.play_rect_area.width = self.scene_width
         self.used_frame = 0
         self.state = GameResultState.FAIL
         self.status = GameStatus.GAME_ALIVE
@@ -101,9 +106,10 @@ class TeamBattleMode:
         for pos in self.all_pos_list:
             no = random.randrange(3)
             self.background.append(
-                create_image_view_data(f"floor_{no}", pos[0], pos[1], 50, 50, 0))
+                create_image_view_data(f"floor_{no}", pos[0], pos[1], self.tileSize, self.tileSize, 0))
         self.obj_list = [self.oil_stations, self.bullet_stations, self.bullets, self.all_players, self.guns, self.walls]
         self.background.append(create_image_view_data("border", 0, -50, self.scene_width, WINDOW_HEIGHT, 0))
+        # self.background.append(create_image_view_data("border", 0, -self.tileSize, self.scene_width, self.scene_height, 0))
 
     def update(self, command: dict):
         # refactor
@@ -232,8 +238,10 @@ class TeamBattleMode:
             if not sprite.is_shoot:
                 continue            
             self.sound_controller.play_sound("shoot", 0.03, -1)
+
             init_data = create_construction(sprite.id, sprite.no, sprite.rect.center, (BULLET_SIZE[0], BULLET_SIZE[1]))
             bullet = Bullet(init_data, rot=sprite.gun.get_rot(), margin=2, spacing=2, bullet_speed=BULLET_SPEED, bullet_travel_distance=BULLET_TRAVEL_DISTANCE
+
                             , play_rect_area=self.play_rect_area)
             self.bullets.add(bullet)
             self.all_sprites.add(bullet)
@@ -295,29 +303,30 @@ class TeamBattleMode:
     def get_toggle_progress_data(self):
         toggle_data = []
         hourglass_index = 0
+        hourglass_size = self.tileSize
         if self.is_manual:
             hourglass_index = self.used_frame // 10 % 15
         toggle_data.append(
-            create_image_view_data(image_id=f"hourglass_{hourglass_index}", x=0, y=2, width=20, height=20, angle=0))
-        x = 23
+            create_image_view_data(image_id=f"hourglass_{hourglass_index}", x=0, y=2, width=hourglass_size, height=hourglass_size, angle=0))
+        x = 28
         y = 8
         for frame in range((self.frame_limit - self.used_frame) // int((30 * 2))):
-            toggle_data.append(create_rect_view_data("frame", x, y, 3, 10, RED))
+            toggle_data.append(create_rect_view_data("frame", x, y, 3, 15, RED))
             x += 3.5
         toggle_data.append(create_text_view_data(f"Frame: {self.frame_limit - self.used_frame}",
-                                                 self.width_center + self.width_center // 2 + 85, 8, RED,
+                                                 self.scene_width-165, 8, RED,
                                                  "24px Arial BOLD"))
-        x = 24
-        y = 20
-        for score in range(min(self.team_green_score, self. team_blue_score)):
+        x = 28
+        y = 25
+        for score in range(min(self.team_green_score, self.team_blue_score)):
             toggle_data.append(create_rect_view_data(name="score", x=x, y=y, width=1, height=10, color=ORANGE))
             x += 1.5
             if x > self.width_center:
-                if y == 32:
-                    y = 44
+                if y == 25:
+                    y = 36
                 else:
-                    y = 32
-                x = 24
+                    y = 25
+                x = 28
         for score in range(abs(self.team_green_score - self. team_blue_score)):
             if self.team_green_score > self.team_blue_score:
                 toggle_data.append(create_rect_view_data("score", x, y, 1, 10, DARKGREEN))
@@ -331,25 +340,24 @@ class TeamBattleMode:
                     y = 32
                 x = 24
         # 1P
-        x = WINDOW_WIDTH - 125
-        y = WINDOW_HEIGHT - 40
+        x = self.scene_width - 125
+        y = self.scene_height - 40
         toggle_data.append(create_text_view_data(f"Score: {self.team_green_score}", x, y, DARKGREEN, "24px Arial BOLD"))
         # 2P
         x = 5
-        y = WINDOW_HEIGHT - 40
         toggle_data.append(create_text_view_data(f"Score: {self.team_blue_score}", x, y, BLUE, "24px Arial BOLD"))
         for player in self.all_players:
             if isinstance(player, Player) and player.is_alive:
                 # lives
                 team_id = "team_a_lives" if player.id == 1 else "team_b_lives"
-                color = DARKGREEN  if player.id == 1 else BLUE
+                color = DARKGREEN if player.id == 1 else BLUE
                 x = player.play_rect_area.midbottom[0] + 7 + (player.no - 1) * 60 if player.id == 1 \
                     else player.play_rect_area.midbottom[0] - (player.no - self.green_team_num) * 60
                 y = player.play_rect_area.height + 73
                 toggle_data.append(
                     create_text_view_data(f"{player.no}P", x - 5, y - 25, color, "22px Arial BOLD"))
                 for live in range(1, player.lives+1):
-                    toggle_data.append(create_image_view_data(f"{team_id}_{live}", x, y, LIVES_SIZE[0], LIVES_SIZE[1]))
+                    toggle_data.append(create_image_view_data(f"{team_id}_{live}", x, y, LIVES_SIZE[0], LIVES_SIZE[1])) 
                     x += 10
                     y -= 10
         return toggle_data
@@ -370,11 +378,17 @@ class TeamBattleMode:
                     team_id = "team_b"
                 # oil
                 y = player.rect.bottom
+                multiplier = self.tileSize / 50
+                x = player.rect.x - 25 * (1 - multiplier)
+                # toggle_with_bias_data.append(create_rect_view_data(f"{team_id}_oil", x, y, int(player.oil*0.5)*multiplier, 8*multiplier, ORANGE))
                 toggle_with_bias_data.append(create_rect_view_data(f"{team_id}_oil", x, y, int(player.oil*0.5), 8, ORANGE))
+
                 # power
                 y = player.rect.bottom + 10
+                # x = player.rect.midbottom - 4
                 for power in range(player.power):
                     toggle_with_bias_data.append(create_rect_view_data(f"{team_id}_power", x+1, y, 3, 8, BLUE))
+                    # toggle_with_bias_data.append(create_rect_view_data(f"{team_id}_power", x+1, y, 3*multiplier, 8*multiplier, BLUE))
                     x += 5
 
         return toggle_with_bias_data
@@ -403,6 +417,7 @@ class TeamBattleMode:
                 to_game_data["bullets_info"] = bullets_info
                 to_game_data["bullet_stations_info"] = bullet_stations_info
                 to_game_data["oil_stations_info"] = oil_stations_info
+                to_game_data["size_multiplier"] = self.size_multiplier
                 to_player_data[get_ai_name(num)] = to_game_data
                 num += 1
         for player in self.players_b:
@@ -416,6 +431,7 @@ class TeamBattleMode:
                 to_game_data["bullets_info"] = bullets_info
                 to_game_data["bullet_stations_info"] = bullet_stations_info
                 to_game_data["oil_stations_info"] = oil_stations_info
+                to_game_data["size_multiplier"] = self.size_multiplier
                 to_player_data[get_ai_name(num)] = to_game_data
                 num += 1
 
