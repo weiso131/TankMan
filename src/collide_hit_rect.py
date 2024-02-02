@@ -1,48 +1,58 @@
-import random
-
+from typing import Optional
 import pygame.sprite
 
-from .TankPlayer import TankPlayer
-from .env import *
+from src.Player import Player
+from src.Bullet import Bullet
+from src.Wall import Wall
 
 
-def get_all_pos():
-    all_pos = []
-    for x in range(18):
-        for y in range(12):
-            all_pos.append((50 * x, 50 * y))
-    return all_pos
-
-def collide_hit_rect(one: pygame.sprite, two: pygame.sprite):
-    return one.hit_rect.colliderect(two.hit_rect)
-
-
-def collide_with_walls(sprite: pygame.sprite.Sprite, group: pygame.sprite.Group):
-    hits = pygame.sprite.spritecollide(sprite, group, False, collide_hit_rect)
-    if hits:
+def collide_with_walls(group1: pygame.sprite.Group, group2: pygame.sprite.Group):
+    hits = pygame.sprite.groupcollide(group1, group2, False, False, pygame.sprite.collide_rect_ratio(0.8))
+    for sprite, walls in hits.items():
         sprite.collide_with_walls()
 
 
-def collide_with_bullets(sprite: pygame.sprite.Sprite, group: pygame.sprite.Group):
-    hits = pygame.sprite.spritecollide(sprite, group, False, collide_hit_rect)
-    if hits and hits[0]._id != sprite._id:
-        hits[0].kill()
-        score = 1
-        if sprite.lives == 1:
-            score += 5
-        sprite.collide_with_bullets()
-        return hits[0]._id, score
-    return None, None
+def collide_with_bullets(group1: pygame.sprite.Group, group2: pygame.sprite.Group, green_team_num: Optional[int] = None):
+    hits = pygame.sprite.groupcollide(group1, group2, False, False, pygame.sprite.collide_rect_ratio(0.8))
+    player_score_data = {}
+    for sprite, bullets in hits.items():
+        for bullet in bullets:
+            if bullet.no != sprite.no and sprite.lives > 0:
+                bullet.kill()
+
+                if isinstance(sprite, Player):
+                    assert green_team_num is not None
+                    if (bullet.no - 1) // green_team_num == (sprite.no - 1) // green_team_num:
+                        # -20 for friendly damage
+                        score = -20
+                    else:
+                        score = 20
+                elif isinstance(sprite, Wall):
+                    score = 1
+                    if sprite.lives == 1:
+                        score += 5
+                else:
+                    continue
+
+                sprite.collide_with_bullets()
+
+                if player_score_data.get(bullet.no) is None:
+                    player_score_data[bullet.no] = 0
+                player_score_data[bullet.no] += score
+    return player_score_data
 
 
-def collide_with_bullet_stations(player: TankPlayer, stations: pygame.sprite.Group):
-    hits = pygame.sprite.spritecollide(player, stations, False, collide_hit_rect)
-    if hits:
-        player.get_power(hits[0].get_supply())
-        return hits[0]
+def collide_with_supply_stations(sprites: pygame.sprite.Group, supply_stations: pygame.sprite.Group):
+    hits = pygame.sprite.groupcollide(sprites, supply_stations, False, False, pygame.sprite.collide_rect_ratio(0.8))
+    for sprite, supply_station in hits.items():
+        if isinstance(sprite, Player):
+            if supply_station[0].id == 5:
+                sprite.get_oil(supply_station[0].power)
+            else:
+                sprite.get_power(supply_station[0].power)
+        elif isinstance(sprite, Bullet):
+            sprite.kill()
 
-def collide_with_oil_stations(player: TankPlayer, stations: pygame.sprite.Group):
-    hits = pygame.sprite.spritecollide(player, stations, False, collide_hit_rect)
-    if hits:
-        player.get_oil(hits[0].get_supply())
-        return hits[0]
+        supply_station[0].collect()
+
+    return [supply_station[0] for supply_station in hits.values()]

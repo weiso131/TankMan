@@ -2,6 +2,7 @@ from os import path
 
 import pygame
 
+IS_DEBUG = False
 # TODO remove width and height setting
 '''width and height'''
 WINDOW_WIDTH = 1000
@@ -9,7 +10,7 @@ WINDOW_HEIGHT = 700
 
 '''environment data'''
 FPS = 30
-SHOOT_COOLDOWN = FPS // 4
+SHOOT_COOLDOWN = 15
 
 '''color'''
 BLACK = "#000000"
@@ -32,10 +33,12 @@ MEDGRAY = "#4B4B4B"
 ORANGE =  "#FFA500"
 
 '''command'''
-LEFT_CMD = "TURN_LEFT"
-RIGHT_CMD = "TURN_RIGHT"
+TURN_LEFT_CMD = "TURN_LEFT"
+TURN_RIGHT_CMD = "TURN_RIGHT"
 FORWARD_CMD = "FORWARD"
 BACKWARD_CMD = "BACKWARD"
+AIM_LEFT_CMD = "AIM_LEFT"
+AIM_RIGHT_CMD = "AIM_RIGHT"
 SHOOT = "SHOOT"
 
 '''data path'''
@@ -47,14 +50,15 @@ MAP_DIR = path.join(GAME_DIR, "..", "asset", 'maps')
 '''BG View'''
 TITLE = "TankMan!"
 BG_COLOR = DARKGREY
-TILE_X_SIZE = 60
-TILE_Y_SIZE = 60
-TILE_SIZE = 60
+TILE_X_SIZE = 50
+TILE_Y_SIZE = 50
+TILE_SIZE = 50
 TEXT_SIZE = 100
 
 '''object size'''
-ALL_OBJECT_SIZE = pygame.Rect(0, 0, 60, 60)
-BULLET_SIZE = (13, 13)
+ALL_OBJECT_SIZE = pygame.Rect(0, 0, 50, 50)
+BULLET_SIZE = (13, 16)
+LIVES_SIZE = (30, 25)
 
 """all setting"""
 DOWN_IMG = 'down'
@@ -71,6 +75,9 @@ PLAYER_2_IMG_NO = 2
 WALL_IMG_NO = 3
 BULLET_STATION_IMG_NO = 4
 OIL_STATION_IMG_NO = 5
+WALL_LIVE = 4
+BULLET_SPEED = 30
+BULLET_TRAVEL_DISTANCE = 300  
 
 """music"""
 BGM = 'background_music.ogg/.wav/.mp3'
