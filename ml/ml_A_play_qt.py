@@ -11,7 +11,7 @@ import pandas as pd
 import math
 sys.path.append(os.path.dirname(__file__))
 from env import *
-from p2_Environment import Environment as env
+from ml_A_Environment import Environment as env
 from QT import QLearningTable
 
 
@@ -30,18 +30,15 @@ class MLPlay:
         self.env = env()
         self.action = self.env.action
         self.state = [self.env.observation]    
-        self.state_ = [self.env.observation]         
+        
 
         self.QT = QLearningTable(actions=list(range(self.env.n_actions)), e_greedy=0)
         
-        folder_path = os.path.dirname(__file__)
+        folder_path = os.path.dirname(__file__) + '/save'                              
+        self.QT.q_table = pd.read_pickle(folder_path+'/A_qtable.pickle')
         
 
-        
-        self.QT.q_table = pd.read_pickle(folder_path+'/p2_qtable.pickle')
-        
-
-        self.action_mapping = [["NONE"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]            
+        self.action_mapping = [["NONE"], ["TURN_LEFT"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]
          
 
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
@@ -57,20 +54,20 @@ class MLPlay:
         observation, reward, done, info = self.env.step(self.action)
 
 
-        self.state_ = [observation]
-        action = self.QT.choose_action(str(self.state_))
+        self.state = [observation]
+        action = self.QT.choose_action(str(self.state))
         
 
 
-        self.state = self.state_
+        
         self.action = action           
         command = self.action_mapping[action]
 
-        # is_wall_in_bullet_range = self.is_wall_in_bullet_range({"x": scene_info["x"], "y": scene_info["y"]}, scene_info["gun_angle"], scene_info["walls_info"], 50)
-        # 
-        # is_target_in_bullet_range = self.is_target_in_bullet_range({"x": scene_info["x"], "y": scene_info["y"]}, scene_info["gun_angle"], {"x":scene_info["competitor_info"][0]["x"], "y":scene_info["competitor_info"][0]["y"]}, BULLET_TRAVEL_DISTANCE)
-        # if is_wall_in_bullet_range or is_target_in_bullet_range:
-        #     command = ["SHOOT"]
+        is_wall_in_bullet_range = self.is_wall_in_bullet_range({"x": scene_info["x"], "y": scene_info["y"]}, scene_info["gun_angle"], scene_info["walls_info"], 50)
+        
+        is_target_in_bullet_range = self.is_target_in_bullet_range({"x": scene_info["x"], "y": scene_info["y"]}, scene_info["gun_angle"], {"x":scene_info["competitor_info"][0]["x"], "y":scene_info["competitor_info"][0]["y"]}, BULLET_TRAVEL_DISTANCE)
+        if is_wall_in_bullet_range or is_target_in_bullet_range:
+            command = ["SHOOT"]        
         return command
 
 
@@ -96,10 +93,10 @@ class MLPlay:
         if detection_distance < distance:
             return False
         
-        angle_rad = math.atan2(target_pos["y"] - tank_pos["y"], target_pos["x"] - tank_pos["x"])            
-        gun_rad = np.radians(180 - gun_angle) 
+        angle_rad = abs(math.atan2(target_pos["y"] - tank_pos["y"], target_pos["x"] - tank_pos["x"]))
+        gun_rad = abs(np.radians(180 - gun_angle) )
         toarance_rad = math.atan2(WALL_WIDTH/2, distance)
-        
-        
+                
+
         return abs(gun_rad - angle_rad) < toarance_rad   
     

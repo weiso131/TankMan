@@ -15,8 +15,8 @@ class QLearningTable:
         self.check_state_exist(observation)
         
         #action selection
-        if np.random.uniform()>=self.epsilon:
-            state_action =self.q_table.loc[observation,:]                      
+        if np.random.uniform()>self.epsilon:
+            state_action =self.q_table.loc[observation,:]                 
             action =np.random.choice(state_action[state_action==np.max(state_action)].index)
         else:
             action = np.random.choice(self.actions)

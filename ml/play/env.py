@@ -1,5 +1,0 @@
-
-"""env setting"""
-BULLET_SPEED = 30
-BULLET_TRAVEL_DISTANCE = 300  
-WALL_WIDTH = 50

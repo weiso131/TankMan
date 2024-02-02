@@ -27,11 +27,10 @@ class MLPlay:
         #         print(f'1P_competitor_info{scene_info["competitor_info"]}')
         #     else:
         #         print(f'2P_competitor_info{scene_info["competitor_info"]}')
-        # print(keyboard)
+        # print(keyboard)        
         if scene_info["status"] != "GAME_ALIVE":
             # print(scene_info)
-            return "RESET"
-        
+            return "RESET"        
         command = []
         if self.side == "1P":
             if pygame.K_RIGHT in keyboard:

@@ -11,7 +11,7 @@ import pandas as pd
 import math
 sys.path.append(os.path.dirname(__file__))
 from env import *
-from p1_Environment import Environment as env
+from ml_B_Environment import Environment as env
 from QT import QLearningTable
 
 
@@ -30,15 +30,12 @@ class MLPlay:
         self.env = env()
         self.action = self.env.action
         self.state = [self.env.observation]    
-        self.state_ = [self.env.observation]         
+        
 
         self.QT = QLearningTable(actions=list(range(self.env.n_actions)), e_greedy=0)
         
-        folder_path = os.path.dirname(__file__) + '/save'
-              
-        
-        
-        self.QT.q_table = pd.read_pickle(folder_path+'/p1_qtable.pickle')
+        folder_path = os.path.dirname(__file__) + '/save'                              
+        self.QT.q_table = pd.read_pickle(folder_path+'/B_qtable.pickle')
         
 
         self.action_mapping = [["NONE"], ["TURN_LEFT"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]
@@ -57,12 +54,12 @@ class MLPlay:
         observation, reward, done, info = self.env.step(self.action)
 
 
-        self.state_ = [observation]
+        self.state = [observation]
         action = self.QT.choose_action(str(self.state))
         
 
 
-        self.state = self.state_
+        
         self.action = action           
         command = self.action_mapping[action]
 
@@ -70,7 +67,7 @@ class MLPlay:
         
         is_target_in_bullet_range = self.is_target_in_bullet_range({"x": scene_info["x"], "y": scene_info["y"]}, scene_info["gun_angle"], {"x":scene_info["competitor_info"][0]["x"], "y":scene_info["competitor_info"][0]["y"]}, BULLET_TRAVEL_DISTANCE)
         if is_wall_in_bullet_range or is_target_in_bullet_range:
-            command = ["SHOOT"]
+            command = ["SHOOT"]        
         return command
 
 
