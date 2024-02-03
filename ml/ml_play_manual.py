@@ -3,7 +3,7 @@ The template of the main script of the machine learning process
 """
 
 import pygame
-from ml.test import *
+
 
 class MLPlay:
     def __init__(self, ai_name, *args, **kwargs):
@@ -27,11 +27,10 @@ class MLPlay:
         #         print(f'1P_competitor_info{scene_info["competitor_info"]}')
         #     else:
         #         print(f'2P_competitor_info{scene_info["competitor_info"]}')
-        # print(keyboard)
+        # print(keyboard)        
         if scene_info["status"] != "GAME_ALIVE":
             # print(scene_info)
-            return "RESET"
-
+            return "RESET"        
         command = []
         if self.side == "1P":
             if pygame.K_RIGHT in keyboard:
@@ -73,9 +72,7 @@ class MLPlay:
 
             if pygame.K_f in keyboard:
                 command.append("SHOOT")
-        bullet = Bullet()
-        # print(scene_info["gun_angle"])
-        # print(bullet.is_wall_in_bullet_range({"x": scene_info["x"], "y": scene_info["y"]}, scene_info["gun_angle"], scene_info["walls_info"], 200))
+        
         if not command:
             command.append("NONE")
         
