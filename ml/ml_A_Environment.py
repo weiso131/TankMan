@@ -69,7 +69,7 @@ class Environment():
         
         
     ##########  to do  ##########
-    def __get_reward(self):        
+    def __get_reward(self, observation):        
         reward = 0        
         
 
