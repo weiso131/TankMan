@@ -43,15 +43,13 @@ class MLPlay:
         else:
             self.QT.q_table.to_pickle('.\\ml\\save\\A_qtable.pickle')
 
-        self.action_mapping = [["NONE"], ["TURN_LEFT"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]            
-         
+        self.action_mapping = self.env.action_mapping
+        #  self.action_mapping = [["NONE"], ["TURN_LEFT"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]
 
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
         """
         Generate the command according to the received scene information
-        """
-        
-        
+        """                
         if scene_info["status"] != "GAME_ALIVE":            
             return "RESET"
         
@@ -68,8 +66,6 @@ class MLPlay:
         self.state = self.state_
         self.action = action           
         command = self.action_mapping[action]
-
-        
         
         return command
 
