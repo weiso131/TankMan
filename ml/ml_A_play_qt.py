@@ -37,8 +37,8 @@ class MLPlay:
         folder_path = os.path.dirname(__file__) + '/save'                              
         self.QT.q_table = pd.read_pickle(folder_path+'/A_qtable.pickle')
         
-
-        self.action_mapping = [["NONE"], ["TURN_LEFT"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]
+        self.action_mapping = self.env.action_mapping
+        # self.action_mapping = [["NONE"], ["TURN_LEFT"], ["TURN_RIGHT"], ["FORWARD"], ["BACKWARD"]]
          
 
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
