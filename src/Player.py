@@ -155,6 +155,7 @@ class Player(pygame.sprite.Sprite):
                     self.is_forward = False
                     self.is_backward = False
                     self.is_turn_right = False
+                    self.action_history.append(TURN_LEFT_CMD)
                 elif TURN_RIGHT_CMD == command and not self.is_turn_right and TURN_LEFT_CMD != command:
                     self.oil -= 0.1
                     self.turn_right()
@@ -162,6 +163,7 @@ class Player(pygame.sprite.Sprite):
                     self.is_forward = False
                     self.is_backward = False
                     self.is_turn_left = False
+                    self.action_history.append(TURN_RIGHT_CMD)
                 elif FORWARD_CMD == command and BACKWARD_CMD != command:
                     self.oil -= 0.1
                     self.forward()
