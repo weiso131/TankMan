@@ -2,17 +2,17 @@ import random
 
 import pygame.event
 import pygame.event
+from src.game_module.SoundController import create_sounds_data, create_bgm_data, SoundController
+from src.game_module.TiledMap import create_construction, TiledMap
+
 from mlgame.game.paia_game import GameResultState, GameStatus
 from mlgame.utils.enum import get_ai_name
 from mlgame.view.view_model import create_asset_init_data, create_text_view_data, \
     create_rect_view_data, create_line_view_data
 from mlgame.view.view_model import create_image_view_data
-
-from src.game_module.SoundController import create_sounds_data, create_bgm_data, SoundController
-from src.game_module.TiledMap import create_construction, TiledMap
 from .Bullet import Bullet
-from .Player import Player
 from .Gun import Gun
+from .Player import Player
 from .Station import Station
 from .Wall import Wall
 from .collide_hit_rect import *
@@ -21,7 +21,8 @@ from .game_module.fuctions import set_topleft, add_score, set_shoot
 
 
 class TeamBattleMode:
-    def __init__(self, green_team_num: int, blue_team_num: int, is_manual: bool, frame_limit: int, sound_path: str, play_rect_area: pygame.Rect):
+    def __init__(self, green_team_num: int, blue_team_num: int, is_manual: bool, frame_limit: int, sound_path: str,
+                 play_rect_area: pygame.Rect):
         # init game
         pygame.init()
         self.sound_path = sound_path
@@ -67,8 +68,10 @@ class TeamBattleMode:
         self.map.add_init_obj_data(PLAYER_1_IMG_NO, Player, act_cd=act_cd, play_rect_area=self.play_rect_area)
         self.map.add_init_obj_data(PLAYER_2_IMG_NO, Player, act_cd=act_cd, play_rect_area=self.play_rect_area)
         self.map.add_init_obj_data(WALL_IMG_NO, Wall, margin=8, spacing=8)
-        self.map.add_init_obj_data(BULLET_STATION_IMG_NO, Station, spawn_cd=30, margin=2, spacing=2, capacity=5, quadrant=1)
-        self.map.add_init_obj_data(OIL_STATION_IMG_NO, Station, spawn_cd=30, margin=2, spacing=2, capacity=30, quadrant=1)
+        self.map.add_init_obj_data(BULLET_STATION_IMG_NO, Station, spawn_cd=30, margin=2, spacing=2, capacity=5,
+                                   quadrant=1)
+        self.map.add_init_obj_data(OIL_STATION_IMG_NO, Station, spawn_cd=30, margin=2, spacing=2, capacity=30,
+                                   quadrant=1)
         # create obj
         all_obj = self.map.create_init_obj_dict()
         # init players
@@ -123,7 +126,8 @@ class TeamBattleMode:
 
     def reset(self):
         # reset init game
-        self.__init__(self.green_team_num, self.blue_team_num, self.is_manual, self.frame_limit, self.sound_path, self.play_rect_area)
+        self.__init__(self.green_team_num, self.blue_team_num, self.is_manual, self.frame_limit, self.sound_path,
+                      self.play_rect_area)
         # reset player pos
         self.change_player_pos()
 
@@ -157,6 +161,7 @@ class TeamBattleMode:
     def get_player_result(self) -> list:
         """Define the end of game will return the player's info for user"""
         res = []
+
         for player in self.all_players:
             if isinstance(player, Player):
                 if player.no > self.green_team_num:
@@ -164,12 +169,35 @@ class TeamBattleMode:
                 else:
                     team_id = "green"
                 get_res = player.get_info_to_game_result()
+
                 get_res["no"] = f"{team_id}_{player.no}P"
+                get_res["player"] = f"{player.no}P"
                 get_res["state"] = self.state
                 get_res["status"] = self.status
                 get_res["used_frame"] = self.used_frame
                 res.append(get_res)
-        return res
+
+        # Sort the list by score in descending order
+        players_sorted = sorted(res, key=lambda x: x["score"], reverse=True)
+
+        # Assign ranks
+        current_rank = 1
+        for i in range(len(players_sorted)):
+            if i > 0 and players_sorted[i]["score"] < players_sorted[i - 1]["score"]:
+                current_rank = i + 1
+            players_sorted[i]["rank"] = current_rank
+
+        # Update the original list with ranks
+        for player in res:
+            for ranked_player in players_sorted:
+                if player["player"] == ranked_player["player"]:
+                    player["rank"] = ranked_player["rank"]
+                    break
+        sorted_res = sorted(res, key=lambda x: x["rank"])
+
+        # Result
+        return sorted_res
+
 
     def check_collisions(self):
         if not self.is_through_wall:
@@ -230,10 +258,11 @@ class TeamBattleMode:
     def create_bullet(self, sprites: pygame.sprite.Group):
         for sprite in sprites:
             if not sprite.is_shoot:
-                continue            
+                continue
             self.sound_controller.play_sound("shoot", 0.03, -1)
             init_data = create_construction(sprite.id, sprite.no, sprite.rect.center, (BULLET_SIZE[0], BULLET_SIZE[1]))
-            bullet = Bullet(init_data, rot=sprite.gun.get_rot(), margin=2, spacing=2, bullet_speed=BULLET_SPEED, bullet_travel_distance=BULLET_TRAVEL_DISTANCE
+            bullet = Bullet(init_data, rot=sprite.gun.get_rot(), margin=2, spacing=2, bullet_speed=BULLET_SPEED,
+                            bullet_travel_distance=BULLET_TRAVEL_DISTANCE
                             , play_rect_area=self.play_rect_area)
             self.bullets.add(bullet)
             self.all_sprites.add(bullet)
@@ -283,11 +312,13 @@ class TeamBattleMode:
                 break
         for i in range(1, 4):
             team_a_lives = "team_a_lives"
-            team_a_lives_image_init_data = create_asset_init_data(f"{team_a_lives}_{i}", LIVES_SIZE[0], LIVES_SIZE[1], path.join(IMAGE_DIR, f"{team_a_lives}_{i}.png"),
+            team_a_lives_image_init_data = create_asset_init_data(f"{team_a_lives}_{i}", LIVES_SIZE[0], LIVES_SIZE[1],
+                                                                  path.join(IMAGE_DIR, f"{team_a_lives}_{i}.png"),
                                                                   f"https://raw.githubusercontent.com/Jesse-Jumbo/TankMan/main/asset/image/{team_a_lives}_{i}.svg")
             init_image_data.append(team_a_lives_image_init_data)
             team_b_lives = "team_b_lives"
-            team_b_lives_image_init_data = create_asset_init_data(f"{team_b_lives}_{i}", LIVES_SIZE[0], LIVES_SIZE[1], path.join(IMAGE_DIR, f"{team_b_lives}_{i}.png"),
+            team_b_lives_image_init_data = create_asset_init_data(f"{team_b_lives}_{i}", LIVES_SIZE[0], LIVES_SIZE[1],
+                                                                  path.join(IMAGE_DIR, f"{team_b_lives}_{i}.png"),
                                                                   f"https://raw.githubusercontent.com/Jesse-Jumbo/TankMan/main/asset/image/{team_b_lives}_{i}.svg")
             init_image_data.append(team_b_lives_image_init_data)
         return init_image_data
@@ -309,7 +340,7 @@ class TeamBattleMode:
                                                  "24px Arial BOLD"))
         x = 24
         y = 20
-        for score in range(min(self.team_green_score, self. team_blue_score)):
+        for score in range(min(self.team_green_score, self.team_blue_score)):
             toggle_data.append(create_rect_view_data(name="score", x=x, y=y, width=1, height=10, color=ORANGE))
             x += 1.5
             if x > self.width_center:
@@ -318,7 +349,7 @@ class TeamBattleMode:
                 else:
                     y = 32
                 x = 24
-        for score in range(abs(self.team_green_score - self. team_blue_score)):
+        for score in range(abs(self.team_green_score - self.team_blue_score)):
             if self.team_green_score > self.team_blue_score:
                 toggle_data.append(create_rect_view_data("score", x, y, 1, 10, DARKGREEN))
             else:
@@ -342,13 +373,13 @@ class TeamBattleMode:
             if isinstance(player, Player) and player.is_alive:
                 # lives
                 team_id = "team_a_lives" if player.id == 1 else "team_b_lives"
-                color = DARKGREEN  if player.id == 1 else BLUE
+                color = DARKGREEN if player.id == 1 else BLUE
                 x = player.play_rect_area.midbottom[0] + 7 + (player.no - 1) * 60 if player.id == 1 \
                     else player.play_rect_area.midbottom[0] - (player.no - self.green_team_num) * 60
                 y = player.play_rect_area.height + 73
                 toggle_data.append(
                     create_text_view_data(f"{player.no}P", x - 5, y - 25, color, "22px Arial BOLD"))
-                for live in range(1, player.lives+1):
+                for live in range(1, player.lives + 1):
                     toggle_data.append(create_image_view_data(f"{team_id}_{live}", x, y, LIVES_SIZE[0], LIVES_SIZE[1]))
                     x += 10
                     y -= 10
@@ -370,11 +401,12 @@ class TeamBattleMode:
                     team_id = "team_b"
                 # oil
                 y = player.rect.bottom
-                toggle_with_bias_data.append(create_rect_view_data(f"{team_id}_oil", x, y, int(player.oil*0.5), 8, ORANGE))
+                toggle_with_bias_data.append(
+                    create_rect_view_data(f"{team_id}_oil", x, y, int(player.oil * 0.5), 8, ORANGE))
                 # power
                 y = player.rect.bottom + 10
                 for power in range(player.power):
-                    toggle_with_bias_data.append(create_rect_view_data(f"{team_id}_power", x+1, y, 3, 8, BLUE))
+                    toggle_with_bias_data.append(create_rect_view_data(f"{team_id}_power", x + 1, y, 3, 8, BLUE))
                     x += 5
 
         return toggle_with_bias_data
@@ -382,16 +414,17 @@ class TeamBattleMode:
     def get_ai_data_to_player(self):
         to_player_data = {}
         num = 0
-        competitor_info = {1: [player.get_data_from_obj_to_game() for player in self.players_a if isinstance(player, Player)]
-                           , 2: [player.get_data_from_obj_to_game() for player in self.players_b if isinstance(player, Player)]
-                           }
+        competitor_info = {
+            1: [player.get_data_from_obj_to_game() for player in self.players_a if isinstance(player, Player)]
+            , 2: [player.get_data_from_obj_to_game() for player in self.players_b if isinstance(player, Player)]
+            }
         walls_info = [wall.get_data_from_obj_to_game() for wall in self.walls if isinstance(wall, Wall)]
         bullet_stations_info = [bullst_station.get_data_from_obj_to_game() for bullst_station in self.bullet_stations if
                                 isinstance(bullst_station, Station)]
         oil_stations_info = [oil_station.get_data_from_obj_to_game() for oil_station in self.oil_stations if
                              isinstance(oil_station, Station)]
         bullets_info = [bullet.get_data_from_obj_to_game() for bullet in self.bullets if
-                             isinstance(bullet, Bullet)]
+                        isinstance(bullet, Bullet)]
         for player in self.players_a:
             if isinstance(player, Player):
                 to_game_data = player.get_data_from_obj_to_game()
@@ -440,8 +473,8 @@ class TeamBattleMode:
         if not is_debug:
             return
         play_rect_area_points = [self.play_rect_area.topleft, self.play_rect_area.topright
-                                 , self.play_rect_area.bottomright, self.play_rect_area.bottomleft
-                                 , self.play_rect_area.topleft]
+            , self.play_rect_area.bottomright, self.play_rect_area.bottomleft
+            , self.play_rect_area.topleft]
 
         for sprite in self.all_sprites:
             if isinstance(sprite, pygame.sprite.Sprite):
