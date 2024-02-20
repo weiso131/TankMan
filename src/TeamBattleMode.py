@@ -201,24 +201,19 @@ class TeamBattleMode:
                 get_res["state"] = self.state
                 get_res["status"] = self.status
                 get_res["used_frame"] = self.used_frame
+                if team_id == "green":
+                    timestamp = self.team_green_maxScoreTime
+                else:
+                    timestamp = self.team_blue_maxScoreTime
+                get_res["latestScoreTime"] = "{:.3f}".format(timestamp)
                 res.append(get_res)
 
-        # Sort the list by score in descending order
-        players_sorted = sorted(res, key=lambda x: x["score"], reverse=True)
-
-        # Assign ranks
-        current_rank = 1
-        for i in range(len(players_sorted)):
-            if i > 0 and players_sorted[i]["score"] < players_sorted[i - 1]["score"]:
-                current_rank = i + 1
-            players_sorted[i]["rank"] = current_rank
-
-        # Update the original list with ranks
-        for player in res:
-            for ranked_player in players_sorted:
-                if player["player"] == ranked_player["player"]:
-                    player["rank"] = ranked_player["rank"]
-                    break
+        for player in res:            
+            if player["no"].find("green")!=-1:
+                player["rank"] = 1 if player["status"] == "GREEN_TEAM_WIN" else 2
+            elif player["no"].find("blue")!=-1:
+                player["rank"] = 1 if player["status"] == "BLUE_TEAM_WIN" else 2
+        
         sorted_res = sorted(res, key=lambda x: x["rank"])
 
         # Result
