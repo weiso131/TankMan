@@ -144,6 +144,7 @@ class Player(pygame.sprite.Sprite):
 
             if self.oil <= 0:
                 self.oil = 0
+                self.lives = 0 
                 continue
 
             # Movement
