@@ -20,19 +20,12 @@ class MLPlay:
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
         """
         Generate the command according to the received scene information
-        """
-        # if scene_info["used_frame"] == 1:
-        #     print(f"{self.side}_scene_info_{scene_info.keys()}")
-        #     if scene_info["id"] == "1P":
-        #         print(f'1P_competitor_info{scene_info["competitor_info"]}')
-        #     else:
-        #         print(f'2P_competitor_info{scene_info["competitor_info"]}')
-        # print(keyboard)        
+        """        
         if scene_info["status"] != "GAME_ALIVE":
             # print(scene_info)
             return "RESET"        
         command = []
-        if self.side == "1P":
+        if self.side == "1P":                        
             if pygame.K_RIGHT in keyboard:
                 command.append("TURN_RIGHT")
             elif pygame.K_LEFT in keyboard:
@@ -55,7 +48,7 @@ class MLPlay:
             # paused
             if pygame.K_t in keyboard:
                 command.append("PAUSED")
-        elif self.side == "2P" or self.side == "4P":
+        elif self.side == "2P":
             if pygame.K_d in keyboard:
                 command.append("TURN_RIGHT")
             elif pygame.K_a in keyboard:
