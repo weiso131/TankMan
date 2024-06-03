@@ -3,9 +3,9 @@ import time
 import pygame.event
 import pygame.event
 
+import os
 import sys
-
-sys.path.append("C:/Users/weiso131/Desktop/gameAI/tank/tank_env")
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.game_module.SoundController import create_sounds_data, create_bgm_data, SoundController
 from src.game_module.TiledMap import create_construction, TiledMap

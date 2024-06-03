@@ -2,8 +2,9 @@ import pygame
 from mlgame.game.generic import quit_or_esc
 from mlgame.view.view import PygameView
 
+import os
 import sys
-sys.path.append("C:/Users/weiso131/Desktop/gameAI/tank/tank_env")
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.Game import Game
 class tankeEnvBase():
