@@ -21,7 +21,7 @@ class Gun(pygame.sprite.Sprite):
         self.used_frame = 0
         self.last_turn_frame = self.used_frame
         self.act_cd = kwargs["act_cd"]
-
+        self.angle = 0
         self.is_alive = True
         self.is_turn_left = False
         self.is_turn_right = False

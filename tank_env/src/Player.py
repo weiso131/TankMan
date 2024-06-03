@@ -34,7 +34,7 @@ class Player(pygame.sprite.Sprite):
         self.used_frame = 0
         self.last_shoot_frame = 0
         self.lives = 3
-        self.power = 10
+        self.power = 1000
         self.vel = Vec(0, 0)
 
         self.speed = 8
@@ -47,7 +47,7 @@ class Player(pygame.sprite.Sprite):
         self.last_shoot_frame = self.used_frame
         self.last_turn_frame = self.used_frame
         self.rot_speed = 45
-        self.oil = 100
+        self.oil = 10000
         self.is_alive = True
         self.is_shoot = False
         self.is_forward = False

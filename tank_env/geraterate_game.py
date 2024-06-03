@@ -36,7 +36,7 @@ for group in Group_mapping:
 if __name__ == '__main__':
     sound = "off"
     total_game = 5
-    frame = 2500
+    frame = 10000
     is_manual = False
         
     

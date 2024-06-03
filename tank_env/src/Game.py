@@ -16,11 +16,12 @@ IMAGE_DIR = path.join(GAME_DIR, "..", "asset", "image")
 
 
 class Game(PaiaGame):
-    def __init__(self, user_num: int, green_team_num: int, blue_team_num: int, is_manual: str, frame_limit: int, sound: str):
+    def __init__(self, user_num: int, green_team_num: int, blue_team_num: int, is_manual: str, frame_limit: int, sound: str, trainMode="normal"):
         super().__init__(user_num)
         # init game
         self.green_team_num = green_team_num
         self.blue_team_num = blue_team_num
+        self.trainMode = trainMode
         self.is_paused = False
         self.is_debug = False
         self.is_sound = False
@@ -112,5 +113,5 @@ class Game(PaiaGame):
         if self.is_sound:
             sound_path = SOUND_DIR
         play_rect_area = pygame.Rect(0, 0, MAP_WIDTH, MAP_HEIGHT)
-        game_mode = TeamBattleMode(self.green_team_num, self.blue_team_num, self.is_manual, self.frame_limit, sound_path, play_rect_area)
+        game_mode = TeamBattleMode(self.green_team_num, self.blue_team_num, self.is_manual, self.frame_limit, sound_path, play_rect_area, trainMode=self.trainMode)
         return game_mode

@@ -2,6 +2,11 @@ import random
 import time
 import pygame.event
 import pygame.event
+
+import sys
+
+sys.path.append("C:/Users/weiso131/Desktop/gameAI/tank/tank_env")
+
 from src.game_module.SoundController import create_sounds_data, create_bgm_data, SoundController
 from src.game_module.TiledMap import create_construction, TiledMap
 
@@ -22,15 +27,24 @@ from .game_module.fuctions import set_topleft, add_score, set_shoot
 
 class TeamBattleMode:
     def __init__(self, green_team_num: int, blue_team_num: int, is_manual: bool, frame_limit: int, sound_path: str,
-                 play_rect_area: pygame.Rect):
+                 play_rect_area: pygame.Rect, trainMode="normal"):
         # init game
         pygame.init()
         self.sound_path = sound_path
         self.green_team_num = green_team_num
+        
         self.blue_team_num = blue_team_num if (6 - (green_team_num + blue_team_num)) >= 0 else (6 - green_team_num)
-        self.map_name = f"map_{green_team_num}_v_{self.blue_team_num}.tmx" if not IS_DEBUG else f"test_map_{green_team_num}_v_{self.blue_team_num}.tmx"
+        self.trainMode = trainMode
+        if (trainMode == "normal"):
+            self.map_name = f"map_{green_team_num}_v_{self.blue_team_num}.tmx" if not IS_DEBUG else f"test_map_{green_team_num}_v_{self.blue_team_num}.tmx"
+        else:
+            self.map_name = trainMode
+        
+
         self.map_path = path.join(MAP_DIR, self.map_name)
+        
         self.map = TiledMap(self.map_path)
+        
         self.scene_width = self.map.map_width
         self.scene_height = self.map.map_height + 100
         self.width_center = self.scene_width // 2
@@ -143,7 +157,7 @@ class TeamBattleMode:
     def reset(self):
         # reset init game
         self.__init__(self.green_team_num, self.blue_team_num, self.is_manual, self.frame_limit, self.sound_path,
-                      self.play_rect_area)
+                      self.play_rect_area, trainMode=self.trainMode)
         # reset player pos
         self.change_player_pos()
 
