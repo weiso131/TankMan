@@ -18,7 +18,7 @@ class MLPlay:
         self.time = 0
 
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
-        return ["NONE"]
+
         """
         Generate the command according to the received scene information
         """        
@@ -26,6 +26,7 @@ class MLPlay:
             # print(scene_info)
             return "RESET"        
         command = []
+        print(scene_info["bullets_info"])
         if self.side == "1P":                        
             if pygame.K_RIGHT in keyboard:
                 command.append("TURN_RIGHT")

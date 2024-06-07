@@ -119,5 +119,39 @@ def canGoTOTarget(x : int, y : int, targetX : int, MapGraph)->bool:
 
 
 
+def goTarget(targetX, targetY, data):
+        x = data["x"]
+        y = data["y"]
+        angleCos, angleSin = getCosSin(data["angle"])
+        isStuck = 0
 
+        
+
+        turn = float(1 - int(isStuck)) * (0.99)
+
+
+
+        action = "NONE"
+
+
+        target_vec_x = getXVec(x, targetX) / getDistance(x, y, targetX, targetY)
+        target_vec_y = getYVec(y, targetY) / getDistance(x, y, targetX, targetY)
+        
+        cross = getCross(angleCos, angleSin, target_vec_x, target_vec_y)
+        dot = getDot(angleCos, angleSin, target_vec_x, target_vec_y)
+
+
+        if (dot < 0):
+            if (cross > 0):
+                action = "TURN_LEFT"
+            else:
+                action = "TURN_RIGHT"
+        else:
+            if (abs(cross) <  turn):
+                action = "FORWARD"
+            elif(cross > turn):
+                action =  "TURN_LEFT"
+            else:
+                action = "TURN_RIGHT"
+        return action
     
