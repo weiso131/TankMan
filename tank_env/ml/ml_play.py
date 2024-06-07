@@ -20,6 +20,7 @@ class MLPlay:
         self.time = 0
 
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
+        return ["TURN_RIGHT"]
         """
         Generate the command according to the received scene information
         """

@@ -34,20 +34,23 @@ class Player(pygame.sprite.Sprite):
         self.used_frame = 0
         self.last_shoot_frame = 0
         self.lives = 3
-        self.power = 1000
+        self.power = 10
         self.vel = Vec(0, 0)
 
         self.speed = 8
+        self.sqrt2 = 1.414
         # TODO refactor use vel
-        self.move_dict = {"left_up": Vec(-self.speed, -self.speed), "right_up": Vec(self.speed, -self.speed),
-                     "left_down": Vec(-self.speed, self.speed), "right_down": Vec(self.speed, self.speed),
-                     "left": Vec(-self.speed, 0), "right": Vec(self.speed, 0), "up": Vec(0, -self.speed),
-                     "down": Vec(0, self.speed)}
+        self.move_dict = {"left_up": Vec(-self.speed/self.sqrt2, -self.speed/self.sqrt2),
+                        "right_up": Vec(self.speed/self.sqrt2, -self.speed/self.sqrt2),
+                        "left_down": Vec(-self.speed/self.sqrt2, self.speed/self.sqrt2),
+                        "right_down": Vec(self.speed/self.sqrt2, self.speed/self.sqrt2),
+                        "left": Vec(-self.speed, 0), "right": Vec(self.speed, 0), "up": Vec(0, -self.speed),
+                        "down": Vec(0, self.speed)}
         self.rot = 0
         self.last_shoot_frame = self.used_frame
         self.last_turn_frame = self.used_frame
         self.rot_speed = 45
-        self.oil = 10000
+        self.oil = 100
         self.is_alive = True
         self.is_shoot = False
         self.is_forward = False
@@ -150,7 +153,7 @@ class Player(pygame.sprite.Sprite):
             # Movement
             if not move_flag:
                 if TURN_LEFT_CMD == command and not self.is_turn_left and TURN_RIGHT_CMD != command:
-                    self.oil -= 0.1
+                    self.oil -= 0.0#======================================================================
                     self.turn_left()
                     self.is_turn_left = True
                     self.is_forward = False
@@ -158,7 +161,7 @@ class Player(pygame.sprite.Sprite):
                     self.is_turn_right = False
                     self.action_history.append(TURN_LEFT_CMD)
                 elif TURN_RIGHT_CMD == command and not self.is_turn_right and TURN_LEFT_CMD != command:
-                    self.oil -= 0.1
+                    self.oil -= 0.0#======================================================================
                     self.turn_right()
                     self.is_turn_right = True
                     self.is_forward = False
@@ -166,7 +169,7 @@ class Player(pygame.sprite.Sprite):
                     self.is_turn_left = False
                     self.action_history.append(TURN_RIGHT_CMD)
                 elif FORWARD_CMD == command and BACKWARD_CMD != command:
-                    self.oil -= 0.1
+                    self.oil -= 0.0#======================================================================
                     self.forward()
                     self.is_forward = True
                     self.is_backward = False
@@ -174,7 +177,7 @@ class Player(pygame.sprite.Sprite):
                     self.is_turn_left = False
                     self.action_history.append(FORWARD_CMD)
                 elif BACKWARD_CMD == command and FORWARD_CMD != command:
-                    self.oil -= 0.1
+                    self.oil -= 0.0#======================================================================
                     self.backward()
                     self.is_backward = True
                     self.is_forward = False
@@ -189,7 +192,7 @@ class Player(pygame.sprite.Sprite):
     def shoot(self):
         if self.last_shoot_frame == 0 or self.used_frame - self.last_shoot_frame > SHOOT_COOLDOWN:
             self.last_shoot_frame = self.used_frame
-            self.power -= 1
+            self.power -= 0#===========================================================================
             self.is_shoot = True
 
     def forward(self):
