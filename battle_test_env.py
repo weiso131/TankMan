@@ -2,9 +2,7 @@ from tank_env.tank_env import tankeEnvBase
 from battle import *
 import pygame
 from playerAlgorithm import *
-import random
 from util import *
-import numpy as np
 
 user_num=6
 c = tankeEnvBase(user_num=user_num, green_team_num=int(user_num / 2), blue_team_num=int(user_num / 2), FPS=30, trainMode="attack_train.tmx")#map_0_v_0.tmx
@@ -20,7 +18,7 @@ for i in range(1):
     data = c.reset()
 
     players = [player(data[str(j) + "P"]) for j in range(1, user_num + 1)]
-     
+    
     
     while (c.not_done()):
         c.render()
@@ -30,8 +28,10 @@ for i in range(1):
         updateData = {}
         for j in range(1, user_num + 1):
             playerID = str(j) + "P"
-            action = shootWall(graph, data[playerID])
+            action = fight(graph, data[playerID])
             updateData[playerID] = [action]
+            if (j == 1):
+                enemyReach(graph, data[playerID])
             
         
         

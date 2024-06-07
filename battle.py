@@ -1,9 +1,9 @@
 from util import *
 import random
-def getMinDisOppo(data):
+def getMinDisOppo(data, enemyFind):
     selfX = data['x']
     selfY = data['y']
-    competitorData = data['competitor_info']
+    competitorData = enemyFind
 
     targetX = 1e4
     targetY = 1e4
@@ -12,18 +12,18 @@ def getMinDisOppo(data):
         competitorY = c['y']
 
         if (getDistance(targetX, targetY, selfX, selfY) > getDistance(competitorX, competitorY, selfX, selfY) and c['lives'] > 0):
-            targetX = competitorX
-            targetY = competitorY
+            targetX = competitorX + 12.5 + 5 * int(c['angle'] % 90 == 0)
+            targetY = competitorY + 12.5 + 5 * int(c['angle'] % 90 == 0)
     return targetX, targetY
 
 
-def getTargetAngleGap(selfX, selfY, selfAngle, targetX, targetY, dis):
+def getTargetAngleGap(selfX, selfY, gunAngle, targetX, targetY, dis):
     target_vec_cos = getXVec(selfX, targetX) / dis
     target_vec_sin = getYVec(selfY, targetY) / dis
 
     targetAngle = (np.degrees(np.arctan2(target_vec_sin, target_vec_cos)) + 360) % 360
 
-    return targetAngle - selfAngle
+    return gunAngle - targetAngle
 def Shoot(selfX, selfY, gunAngle, targetX, targetY, dis):
     angleGap = abs(getTargetAngleGap(selfX, selfY, gunAngle, targetX, targetY, dis))
     angleTan = np.tan(angleGap / 180 * np.pi)
@@ -31,10 +31,10 @@ def Shoot(selfX, selfY, gunAngle, targetX, targetY, dis):
     if (angleGap <= 45 and dis * angleTan < 13 and dis < 300):
         return "SHOOT"
     return "NONE"
-def TurnAngleToTarget(data):
-    targetX, targetY = getMinDisOppo(data)
-    selfX = data['x']
-    selfY = data['y']
+def TurnAngleToTarget(data, enemyFind):
+    targetX, targetY = getMinDisOppo(data, enemyFind)
+    selfX = data['x'] + 5 * int(data['angle'] % 90 != 0) + 12.5
+    selfY = data['y'] + 5 * int(data['angle'] % 90 != 0) + 12.5
     gunAngle = (data['gun_angle'] + 540) % 360
     dis = getDistance(selfX, selfY, targetX, targetY)
 
@@ -45,20 +45,24 @@ def TurnAngleToTarget(data):
     teamMateShootDis = shootTeamMate(data, selfX, selfY, gunAngle)
 
     
-    
-    if (abs(targetAngleGap) <= 45):
+    if (np.cos(targetAngleGap / 180 * np.pi) >= 1 / (2 ** 0.5)):
         action = Shoot(selfX, selfY, gunAngle, targetX, targetY, dis)
-        if (dis > teamMateShootDis or action == "NONE"):#dis > teamMateShoot代表會射到隊友
-            return "NONE"
+        if (dis > teamMateShootDis or dis > 300):#dis > teamMateShoot代表會射到隊友
+            return random.choice(["FORWARD", "BACKWARD"])
+        if (action == "NONE"):
+            return random.choice(["FORWARD", "BACKWARD", "SHOOT"])
         return action
     
-    elif (targetAngleGap > 0):
+    elif (np.sin(targetAngleGap / 180 * np.pi) < 0):
         return "AIM_LEFT"
     else:
         return "AIM_RIGHT"
     
 def shootTeamMate(data, selfX, selfY, gunAngle):
-    teamMateShoot = 1e4
+    """
+    確認這個砲口方向會不會打到隊友
+    """
+    teamMateShoot = 600
     for tm in data['teammate_info']:
         if ((tm['x'] != selfX or tm['y'] != selfY) and tm['lives'] > 0):
             tmDis = getDistance(selfX, selfY, tm['x'], tm['y'])
@@ -68,26 +72,15 @@ def shootTeamMate(data, selfX, selfY, gunAngle):
     return teamMateShoot
 
 
-def shootWall(graph, data):
+def fight(graph, data):
+    
+
+
     gunAngle = (data['gun_angle'] + 540) % 360
     angle = (data['angle'] + 540) % 360
     
     x, y = data['x'] + 5 * int(angle % 90 != 0) + 12.5, data['y'] + 5 * int(angle % 90 != 0) + 12.5 #方位補正，轉到斜的座標會-5
     graphX, graphY = int(x / 25), int(y / 25)
-    
-    
-
-    for horizon_angle in range(0, 181, 180):
-        teamMateShootDis = shootTeamMate(data, x, y, horizon_angle)
-        wallThisAngle = haveWall(graph, graphX, graphY, horizon_angle)
-        if (wallThisAngle != 1e4 and wallThisAngle < teamMateShootDis ):
-            if (gunAngle == horizon_angle):
-                return "SHOOT"
-            elif (gunAngle > horizon_angle):
-                return "AIM_RIGHT"
-            else:
-                return "AIM_LEFT"
-        
     
     if (abs(x - 500) > 125):
         return "FORWARD"
@@ -96,19 +89,52 @@ def shootWall(graph, data):
             return "TURN_RIGHT"
         else:
             return "TURN_LEFT"
+    enemyFind = enemyReach(graph, data)
+    if (len(enemyFind) != 0):
+        return TurnAngleToTarget(data, enemyFind)
 
-
-    
+    wallFourWay = haveWallFourWay(data, x, y, graph)
+    for i in range(4):
+        wall = wallFourWay[i]
+        if (wall == 1):
+            if (gunAngle == i * 90):
+                return "SHOOT"
+            elif (gunAngle > i * 90):
+                return "AIM_RIGHT"
+            else:
+                return "AIM_LEFT"
+     
     return random.choice(["FORWARD", "BACKWARD"])
 
 
+
 def PosNag(num):
+    """
+    正值回傳:1
+    負值回傳:-1
+    否則:0
+    """
     if (abs(num) < 1e-9):
         return 0
     elif (num > 0):
         return 1
     elif (num < 0):
         return -1
+
+def haveWallFourWay(data, x, y, graph):
+    """
+    這個方向有沒有牆可以打
+    """
+    fourWay = []
+    graphX, graphY = int(x / 25), int(y / 25)
+    for horizon_angle in range(0, 360, 90):
+        teamMateShootDis = shootTeamMate(data, x, y, horizon_angle)
+        wallThisAngle = haveWall(graph, graphX, graphY, horizon_angle)
+        if (wallThisAngle <= 300 and wallThisAngle < teamMateShootDis ):
+            fourWay.append(1)
+        else:
+            fourWay.append(0)
+    return tuple(fourWay)
 
 def haveWall(graph, graphX, graphY, angle)->float:
     """
@@ -123,9 +149,28 @@ def haveWall(graph, graphX, graphY, angle)->float:
             break
         if (int(graph[graphY - sin * i, graphX + cos * i]) > 0):
             return i * 25
-    return 1e4
+    return 600
 
 
-def enemy(graph, data):
-    x, y = data['x'], data['y']
-    
+def enemyReach(graph, data):
+    x, y = data['x'] + 12.5 + 5 * int(data['angle'] % 90 == 0), data['y'] + 12.5 + 5 * int(data['angle'] % 90 == 0)
+    competitor_info = data['competitor_info']
+
+    enemyFind = []
+    for enemy in competitor_info:
+        enemy_x, enemy_y = enemy['x'] + 12.5 + 5 * int(enemy['angle'] % 90 == 0), enemy['y'] + 12.5 + 5 * int(enemy['angle'] % 90 == 0)
+        enemyWayX, enemyWayY = PosNag(enemy_x - x) + 1 - abs(PosNag(enemy_x - x)), PosNag(enemy_y - y) + 1 - abs(PosNag(enemy_y - y))
+
+        seeEnemy = True
+
+        for wall_x in range(int(x / 25), int(enemy_x / 25), enemyWayX):
+            for wall_y in range(int(y / 25), int(enemy_y / 25), enemyWayY):
+                if (int(graph[wall_y, wall_x]) > 0):
+                    seeEnemy = False
+                    break
+            if (not seeEnemy): break
+
+        if (seeEnemy and enemy['lives'] > 0):
+            enemyFind.append(enemy)
+    return enemyFind
+
