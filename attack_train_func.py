@@ -1,5 +1,6 @@
 from battle import *
 from util import *
+from battleAlgorithm import *
 def getDataForAgent(data, graph):
     Angle = ((data['angle'] + 540) % 360) / 45
     x = data['x'] + 12.5 + 5 * (Angle * 45 % 90 != 0)
@@ -29,15 +30,29 @@ def getDataForAgent(data, graph):
         id = (int(enemy['id'][0]) - 1) % 3
         enemyShow[id] = 1
 
-    e1HP, e2HP, e3HP = enemy_info[0]['lives'], enemy_info[1]['lives'], enemy_info[2]['lives']
+    #e1HP, e2HP, e3HP = enemy_info[0]['lives'], enemy_info[1]['lives'], enemy_info[2]['lives']
 
     return [x, y, Angle, gunAngle, hitTmDis, wallUp, walldown, wallLeft, wallRight,
-             e1x, e1y, e2x, e2y, e3x, e3y, e1Aim, e2Aim, e3Aim, enemyShow[0], enemyShow[1], enemyShow[2], e1HP, e2HP, e3HP]
+             e1x, e1y, e2x, e2y, e3x, e3y, e1Aim, e2Aim, e3Aim, enemyShow[0], enemyShow[1], enemyShow[2]]
 
-def testDataForAgent(dataForAgent):
+
+
+def isAimToYou(selfX, selfY, gunAngle, targetX, targetY, teamMateShootDis):
+    dis = getDistance(selfX, selfY, targetX, targetY)
+    action = Shoot(selfX, selfY, gunAngle, targetX, targetY, dis)
+    if (dis > teamMateShootDis and dis < 300):#dis > teamMateShoot代表會射到隊友
+        return -1
+    if (action == "NONE"):
+        return 0
+    return 1
+
+
+def rewardFunction(DataForAgent, action, score, livesLoss):
+    reward = livesLoss * (-10) + getScoreReward(score)
+
     x, y, Angle, gunAngle, hitTmDis, wallUp, wallDown, wallLeft, wallRight,\
-    e1x, e1y, e2x, e2y, e3x, e3y, e1Aim, e2Aim, e3Aim, enemyShow1, enemyShow2, enemyShow3, e1HP, e2HP, e3HP = tuple(dataForAgent)
-    
+    e1x, e1y, e2x, e2y, e3x, e3y, e1Aim, e2Aim, e3Aim, enemyShow1, enemyShow2, enemyShow3 = tuple(DataForAgent)
+
     enemyFind = []
 
     if (enemyShow1 == 1):
@@ -47,73 +62,34 @@ def testDataForAgent(dataForAgent):
     if (enemyShow3 == 1):
         enemyFind.append({'x' : e3x, 'y' : e3y})
 
-    if (abs(x - 500) > 125):
-        return "FORWARD"
-    elif (int(Angle * 45) != 90):
-        if (int(Angle * 45) > 90):
-            return "TURN_RIGHT"
-        else:
-            return "TURN_LEFT"
-    
-    if (len(enemyFind) != 0):
+    if (action == "SHOOT"):
         if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
-            return random.choice(["FORWARD", "BACKWARD", "SHOOT"])
+            reward += 0.5
+        elif (e1Aim == -1 or e2Aim == -1 or e3Aim == -1):
+            reward -= 2
+
+    elif (len(enemyFind) != 0 and (action == "AIM_RIGHT" or action == "AIM_LEFT")):
+        aimAction = TurnAngleToEnemy_(x, y, gunAngle * 45, enemyFind, hitTmDis)
+        if (aimAction == action):
+            reward += 0.5
+
+    elif (ShootWall(gunAngle * 45, wallLeft, wallRight, wallUp, wallDown) == action):
+        reward += 0.0001
+
+    return reward
+
+
+
+
+def getScoreReward(score):
+    reward = 0
+    if (score >= 20):
+        reward += int(score / 20) * 10 #打到人10分
+        score = score % 20
+
+    if (score >= 5):
+        reward += int(score / 5) * 0.001 #打爆牆壁0.02分
+        score = score % 5
+
+    return reward + score * 0.001
         
-        return TurnAngleToEnemy_(x, y, gunAngle * 45, enemyFind, hitTmDis)
-
-    if (wallLeft == 1):
-        return turnGunToWall(gunAngle * 45, 180)
-    if (wallRight == 1):
-        return turnGunToWall(gunAngle * 45, 0)
-    if (wallUp == 1): 
-        return turnGunToWall(gunAngle * 45, 90)
-    if (wallDown == 1):
-        return turnGunToWall(gunAngle * 45, 270)
-
-
-
-    return random.choice(["FORWARD", "BACKWARD"])
-
-def isAimToYou(selfX, selfY, gunAngle, targetX, targetY, teamMateShootDis):
-    dis = getDistance(selfX, selfY, targetX, targetY)
-    action = Shoot(selfX, selfY, gunAngle, targetX, targetY, dis)
-    if (dis > teamMateShootDis or action == "NONE"):#dis > teamMateShoot代表會射到隊友
-        return 0
-    return 1
-
-def TurnAngleToEnemy_(selfX, selfY, gunAngle, enemyFind, teamMateShootDis):
-    targetX, targetY = getMinDisOppo_(selfX, selfY, enemyFind)
-    
-    dis = getDistance(selfX, selfY, targetX, targetY)
-
-    targetAngleGap = getTargetAngleGap(selfX, selfY, gunAngle, targetX, targetY, dis)
-
-    if (np.cos(targetAngleGap / 180 * np.pi) >= 1 / (2 ** 0.5)):
-        return random.choice(["FORWARD", "BACKWARD"])
-    
-    elif (np.sin(targetAngleGap / 180 * np.pi) < 0):
-        return "AIM_LEFT"
-    else:
-        return "AIM_RIGHT"
-    
-def getMinDisOppo_(selfX, selfY, enemyFind):
-    competitorData = enemyFind
-
-    targetX = 1e4
-    targetY = 1e4
-    for c in competitorData:
-        competitorX = c['x']
-        competitorY = c['y']
-
-        if (getDistance(targetX, targetY, selfX, selfY) > getDistance(competitorX, competitorY, selfX, selfY)):
-            targetX = competitorX
-            targetY = competitorY
-    return targetX, targetY
-
-def turnGunToWall(gunAngle, wallAngle):
-    if (gunAngle == wallAngle):
-        return "SHOOT"
-    elif (gunAngle > wallAngle):
-        return "AIM_RIGHT"
-    else:
-        return "AIM_LEFT"
