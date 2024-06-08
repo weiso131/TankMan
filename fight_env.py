@@ -1,14 +1,15 @@
+
+
 from tank_env.tank_env import tankeEnvBase
-from attack_train_func import getDataForAgent
+from fight_train_func import getDataForAgent
 
 
+class fight_env(tankeEnvBase):
 
-class attack_env(tankeEnvBase):
-
-    def __init__(self, user_num=6, green_team_num=3, blue_team_num=3, FPS=60, trainMode="attack_train_wall.tmx"):
+    def __init__(self, user_num=6, green_team_num=3, blue_team_num=3, FPS=60, trainMode="plain.tmx"):
         super().__init__(user_num, green_team_num, blue_team_num, FPS, trainMode)
         
-
+        
     
     def getDataForAllAgent(self)->dict:
 
