@@ -42,9 +42,9 @@ def getDataForAgent(data, graph):
 def normalizeData(DataForAgent):
     Angle, gunAngle, e1x, e1y, e2x, e2y, e3x, e3y, e1Aim, e2Aim, e3Aim, enemyShow1, enemyShow2, enemyShow3 = tuple(DataForAgent)
 
-    e1Dis = (e1x ** 2 + e1y ** 2) ** 0.5
-    e2Dis = (e2x ** 2 + e2y ** 2) ** 0.5
-    e3Dis = (e3x ** 2 + e3y ** 2) ** 0.5
+    e1Dis = (e1x ** 2 + e1y ** 2) ** 0.5 + 1e-7
+    e2Dis = (e2x ** 2 + e2y ** 2) ** 0.5 + 1e-7
+    e3Dis = (e3x ** 2 + e3y ** 2) ** 0.5 + 1e-7
 
     return Angle / 8, gunAngle / 8, e1x / e1Dis, e1y / e1Dis, e2x / e2Dis, e2y / e2Dis, e3x / e3Dis, e3y / e3Dis, \
         (e1Aim + 1) / 2, (e2Aim + 1) / 2, (e3Aim + 1) / 2, enemyShow1, enemyShow2, enemyShow3, min(e1Dis, 300) / 300, min(e2Dis, 300) / 300, min(e3Dis, 300) / 300
@@ -73,12 +73,14 @@ def rewardFunction(DataForAgent, action : str, score, livesLoss):
         if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
             reward += 0.5
         elif (e1Aim == -1 or e2Aim == -1 or e3Aim == -1):
-            reward -= 2
+            reward -= 10
 
     elif (len(enemyFind) != 0 and (action == "AIM_RIGHT" or action == "AIM_LEFT")):
         aimAction = TurnAngleToEnemy_(0, 0, gunAngle * 45, enemyFind)
         if (aimAction == action):
             reward += 0.5
+        else:
+            reward -= 0.5
 
 
     return reward

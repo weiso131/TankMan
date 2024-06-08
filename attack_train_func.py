@@ -39,9 +39,9 @@ def normalizeData(DataForAgent):
     Angle, gunAngle, wallUp, wallDown, wallLeft, wallRight,\
     e1x, e1y, e2x, e2y, e3x, e3y, e1Aim, e2Aim, e3Aim, enemyShow1, enemyShow2, enemyShow3 = tuple(DataForAgent)
 
-    e1Dis = (e1x ** 2 + e1y ** 2) ** 0.5
-    e2Dis = (e2x ** 2 + e2y ** 2) ** 0.5
-    e3Dis = (e3x ** 2 + e3y ** 2) ** 0.5
+    e1Dis = (e1x ** 2 + e1y ** 2) ** 0.5 + 1e-7
+    e2Dis = (e2x ** 2 + e2y ** 2) ** 0.5 + 1e-7
+    e3Dis = (e3x ** 2 + e3y ** 2) ** 0.5 + 1e-7
 
     return Angle / 8, gunAngle / 8, wallUp, wallDown, wallLeft, wallRight,\
     e1x / e1Dis, e1y / e1Dis, e2x / e2Dis, e2y / e2Dis, e3x / e3Dis, e3y / e3Dis, \

@@ -31,6 +31,8 @@ for i in range(1):
             action = testDataForAgent(state)
             updateData[playerID] = [action]
             actions[playerID] = action
+            
+
         data = c.update(updateData)  
 
         for j in range(1, 7):
@@ -39,12 +41,9 @@ for i in range(1):
 
             reward = rewardFunction(oldState[playerID], \
                                     actions[playerID], scoreUp, liveLoss)
-            
+            print(len(normalizeData(new_state)))
             done = int(c.lives[j] == 0)
 
-            if (j == 1 and reward != 0):
-                print(len(normalizeData(oldState[playerID])))
-                print(f"old_state:{normalizeData(oldState[playerID])}\nnew_state:{normalizeData(new_state)}\naction:{actions[playerID]}, reward:{reward}, done: {done}")
 
 
 pygame.quit()

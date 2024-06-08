@@ -17,23 +17,14 @@ def testDataForAgent(dataForAgent):
     
     
     if (len(enemyFind) != 0):
-        if (int(Angle * 45) != 90):
-            if (int(Angle * 45) > 90):
-                return "TURN_RIGHT"
-            else:
-                return "TURN_LEFT"
+
         if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
             
-            return random.choice(["FORWARD", "BACKWARD", "SHOOT"])
+            return random.choice(["FORWARD", "BACKWARD", "TURN_LEFT", "TURN_RIGHT", "SHOOT"])
         
         return TurnAngleToEnemy_(0, 0, gunAngle * 45, enemyFind)
 
     
-    if (int(Angle * 45) != 0):
-            if (int(Angle * 45) > 0):
-                return "TURN_RIGHT"
-            else:
-                return "TURN_LEFT"
 
     
     return random.choice(["FORWARD", "BACKWARD", "TURN_LEFT", "TURN_RIGHT"])
