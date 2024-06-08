@@ -12,7 +12,7 @@ class tankeEnvBase():
     def __init__(self, user_num=6, green_team_num=3, blue_team_num=3, FPS=60, trainMode="normal"):
 
         # initialize game
-        self.frame = 2500
+        self.frame = 1000
         self.sound = "off"
         self.is_manual = False
         self.FPS = FPS
@@ -40,8 +40,11 @@ class tankeEnvBase():
         except:
             scene_init_info_dict = self.game.get_scene_init_data()
             self.game_view = PygameView(scene_init_info_dict)
-    def not_done(self):
-        return self.game.is_running() and not quit_or_esc()
+    def not_done(self)->bool:
+        """
+        檢查他停了沒
+        """
+        return self.game.is_running() and (not quit_or_esc())
     
     def reset(self):
         self.game.reset()
