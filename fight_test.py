@@ -3,10 +3,10 @@ from fight_env import fight_env
 import pygame
 
 from fight_train_func import *
-from fightAlgorithm import testDataForAgent
+from fightAlgorithm import *
 
 
-c = fight_env()#map_0_v_0.tmx
+c = fight_env(trainMode="attack_train.tmx")#map_0_v_0.tmx
 
 
 for i in range(1):
@@ -32,6 +32,8 @@ for i in range(1):
             updateData[playerID] = [action]
             actions[playerID] = action
             
+    
+            
 
         data = c.update(updateData)  
 
@@ -41,10 +43,10 @@ for i in range(1):
 
             reward = rewardFunction(oldState[playerID], \
                                     actions[playerID], scoreUp, liveLoss)
-            print(len(normalizeData(new_state)))
+
             done = int(c.lives[j] == 0)
 
-
+            
 
 pygame.quit()
 

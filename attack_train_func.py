@@ -229,7 +229,6 @@ def TurnAngleToEnemy_(selfX, selfY, gunAngle, enemyFind):
     dis = getDistance(selfX, selfY, targetX, targetY)
 
     targetAngleGap = getTargetAngleGap(selfX, selfY, gunAngle, targetX, targetY, dis)
-
     if (np.cos(targetAngleGap / 180 * np.pi) >= 1 / (2 ** 0.5)):
         return random.choice(["FORWARD", "BACKWARD"])
     

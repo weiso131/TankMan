@@ -2,30 +2,27 @@
 from fight_train_func import *
 
 def testDataForAgent(dataForAgent):
-    Angle, gunAngle, \
-    e1x, e1y, e2x, e2y, e3x, e3y, e1Aim, e2Aim, e3Aim, enemyShow1, enemyShow2, enemyShow3 = tuple(dataForAgent)
+    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(dataForAgent)
     
-    enemyFind = []
+    if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
+        return random.choice(["FORWARD", "BACKWARD", "SHOOT"])
 
-    if (enemyShow1 == 1):
-        enemyFind.append({'x' : e1x, 'y' : e1y})
-    if (enemyShow2 == 1):
-        enemyFind.append({'x' : e2x, 'y' : e2y})
-    if (enemyShow3 == 1):
-        enemyFind.append({'x' : e3x, 'y' : e3y})
+    enemyAngle = []
+    if (e1Dis <= 1200):
+        enemyAngle.append((e1Angle, e1Dis))
+    if (e2Dis <= 1200):
+        enemyAngle.append((e2Angle, e2Dis))
+    if (e3Dis <= 1200):
+        enemyAngle.append((e3Angle, e3Dis))
 
-    
-    
-    if (len(enemyFind) != 0):
-
-        if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
-            
-            return random.choice(["FORWARD", "BACKWARD", "TURN_LEFT", "TURN_RIGHT", "SHOOT"])
-        
-        return TurnAngleToEnemy_(0, 0, gunAngle * 45, enemyFind)
-
+    minDisEnemyAngle, minEnemyDis = GetMinDisEnemy(gunAngle, enemyAngle)
+    if (minEnemyDis <= 300):
+        return meetEnemy(Angle * 45, gunAngle * 45, minDisEnemyAngle)
+    else:
+        return moveToEnemy(Angle * 45, minDisEnemyAngle)
     
 
-    
-    return random.choice(["FORWARD", "BACKWARD", "TURN_LEFT", "TURN_RIGHT"])
+
+
+
 

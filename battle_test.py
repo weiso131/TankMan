@@ -7,7 +7,7 @@ from attack_train_func import *
 from battleAlgorithm import testDataForAgent
 
 user_num=6
-c = attack_env(user_num=user_num, green_team_num=int(user_num / 2), blue_team_num=int(user_num / 2), FPS=60, trainMode="plain.tmx")#map_0_v_0.tmx
+c = attack_env(user_num=user_num, green_team_num=int(user_num / 2), blue_team_num=int(user_num / 2), FPS=60, trainMode="attack_train.tmx")#map_0_v_0.tmx
 
 
 for i in range(1):

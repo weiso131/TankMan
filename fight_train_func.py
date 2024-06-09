@@ -23,31 +23,26 @@ def getDataForAgent(data, graph):
 
     
 
-    e1Aim, e2Aim, e3Aim = isAimToYou(x, y, (data['gun_angle'] + 540) % 360, e1x, e1y, hitTmDis), \
-                            isAimToYou(x, y, (data['gun_angle'] + 540) % 360, e2x, e2y, hitTmDis),\
-                            isAimToYou(x, y, (data['gun_angle'] + 540) % 360, e3x, e3y, hitTmDis)
+    e1Aim, e2Aim, e3Aim = isAimToYou(x, y, (data['gun_angle'] + 540) % 360, e1x, e1y, hitTmDis) * int(enemy_info[0]['lives'] != 0), \
+                            isAimToYou(x, y, (data['gun_angle'] + 540) % 360, e2x, e2y, hitTmDis) * int(enemy_info[1]['lives'] != 0),\
+                            isAimToYou(x, y, (data['gun_angle'] + 540) % 360, e3x, e3y, hitTmDis) * int(enemy_info[2]['lives'] != 0)
     
-    enemyShow = [0, 0, 0]
-    enemyFind = enemyReach(graph, data)
+    e1Dis = min(getDistance(e1x, e1y, x, y) + int(enemy_info[0]['lives'] == 0) * 1300, 1300)
+    e2Dis = min(getDistance(e2x, e2y, x, y) + int(enemy_info[1]['lives'] == 0) * 1300, 1300)
+    e3Dis = min(getDistance(e3x, e3y, x, y) + int(enemy_info[2]['lives'] == 0) * 1300, 1300)
 
-    for enemy in enemyFind:
-        id = (int(enemy['id'][0]) - 1) % 3
-        enemyShow[id] = 1
+    e1Angle = getTargetAngle(0, 0, e1x - x, e1y - y, e1Dis)
+    e2Angle = getTargetAngle(0, 0, e2x - x, e2y - y, e2Dis)
+    e3Angle = getTargetAngle(0, 0, e3x - x, e3y - y, e3Dis)
 
 
-    #e1HP, e2HP, e3HP = enemy_info[0]['lives'], enemy_info[1]['lives'], enemy_info[2]['lives']
-
-    return [Angle, gunAngle, e1x - x, e1y - y, e2x - x, e2y - y, e3x - x, e3y - y, e1Aim, e2Aim, e3Aim, enemyShow[0], enemyShow[1], enemyShow[2]]
+    return [Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis]
 
 def normalizeData(DataForAgent):
-    Angle, gunAngle, e1x, e1y, e2x, e2y, e3x, e3y, e1Aim, e2Aim, e3Aim, enemyShow1, enemyShow2, enemyShow3 = tuple(DataForAgent)
+    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(DataForAgent)
 
-    e1Dis = (e1x ** 2 + e1y ** 2) ** 0.5 + 1e-7
-    e2Dis = (e2x ** 2 + e2y ** 2) ** 0.5 + 1e-7
-    e3Dis = (e3x ** 2 + e3y ** 2) ** 0.5 + 1e-7
-
-    return Angle / 8, gunAngle / 8, e1x / e1Dis, e1y / e1Dis, e2x / e2Dis, e2y / e2Dis, e3x / e3Dis, e3y / e3Dis, \
-        (e1Aim + 1) / 2, (e2Aim + 1) / 2, (e3Aim + 1) / 2, enemyShow1, enemyShow2, enemyShow3, min(e1Dis, 300) / 300, min(e2Dis, 300) / 300, min(e3Dis, 300) / 300
+    return Angle / 8, gunAngle / 8, e1Angle / 360, e2Angle / 360, e3Angle / 360, \
+        e1Aim, e2Aim, e3Aim, e1Dis / 1300, e2Dis / 1300, e3Dis / 1300
 
     #加上distance的資訊
 
@@ -57,33 +52,84 @@ def normalizeData(DataForAgent):
 def rewardFunction(DataForAgent, action : str, score, livesLoss):
     reward = livesLoss * (-10) + score / 2
 
-    Angle, gunAngle, e1x, e1y, e2x, e2y, e3x, e3y, \
-        e1Aim, e2Aim, e3Aim, enemyShow1, enemyShow2, enemyShow3 = tuple(DataForAgent)
+    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(DataForAgent)
 
-    enemyFind = []
+    Angle *= 45
+    gunAngle *= 45
 
-    if (enemyShow1 == 1):
-        enemyFind.append({'x' : e1x, 'y' : e1y})
-    if (enemyShow2 == 1):
-        enemyFind.append({'x' : e2x, 'y' : e2y})
-    if (enemyShow3 == 1):
-        enemyFind.append({'x' : e3x, 'y' : e3y})
+
+    enemyAngle = []
+    if (e1Dis <= 300):
+        enemyAngle.append((e1Angle, e1Dis))
+    if (e2Dis <= 300):
+        enemyAngle.append((e2Angle, e2Dis))
+    if (e3Dis <= 300):
+        enemyAngle.append((e3Angle, e3Dis))
+
+    minDisEnemyAngle, minEnemyDis = GetMinDisEnemy(gunAngle, enemyAngle)
 
     if (action == "SHOOT"):
         if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
             reward += 0.5
         elif (e1Aim == -1 or e2Aim == -1 or e3Aim == -1):
             reward -= 10
-
-    elif (len(enemyFind) != 0 and (action == "AIM_RIGHT" or action == "AIM_LEFT")):
-        aimAction = TurnAngleToEnemy_(0, 0, gunAngle * 45, enemyFind)
-        if (aimAction == action):
-            reward += 0.5
         else:
             reward -= 0.5
+    targetGunAngleGap = gunAngle - minDisEnemyAngle
+    targetTankAngleGap = (Angle - (int((minDisEnemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
+    if (minEnemyDis <= 300):
+        
+        if (np.cos(targetGunAngleGap / 180 * np.pi) >= 1 / (2 ** 0.5)):
+            reward += 0.25
+        else:
+            reward -= 0.03
+        if (targetTankAngleGap % 180 != 0 and targetTankAngleGap % 90 == 0):
+            reward += 0.25
+        else:
+            reward -= 0.03
+    else:
+        if ((targetTankAngleGap == 0 and action == "FORWARD") or (targetTankAngleGap == 180 and action == "BACKWARD")):
+            reward += 0.01
+        elif((targetTankAngleGap == 0 and action == "BACKWARD") or (targetTankAngleGap == 180 and action == "FORWARD")):
+            reward -= 0.01
+    
 
 
     return reward
 
 
+def GetMinDisEnemy(gunAngle, enemyAngleDis):
+    enemyAngle = gunAngle
+    minEnemyDis = 1e4
+    for angle, dis in enemyAngleDis:
+        if (dis < minEnemyDis):
+            minEnemyDis = dis
+            enemyAngle = angle
+    
+    return enemyAngle, minEnemyDis
 
+def meetEnemy(tankAngle, gunAngle, enemyAngle):
+    targetGunAngleGap = gunAngle - enemyAngle
+    targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
+    if (np.cos(targetGunAngleGap / 180 * np.pi) >= 1 / (2 ** 0.5)):
+        if (targetTankAngleGap % 180 == 0 or targetTankAngleGap % 180 == 135):
+            return "TURN_RIGHT"
+        elif (targetTankAngleGap % 180 == 45):
+            return "TURN_LEFT"
+        else:
+            return random.choice(["FORWARD", "BACKWARD"])
+    
+    elif (np.sin(targetGunAngleGap / 180 * np.pi) < 0):
+        return "AIM_LEFT"
+    else:
+        return "AIM_RIGHT"
+    
+def moveToEnemy(tankAngle, enemyAngle):
+    targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
+
+    if (targetTankAngleGap == 0):
+        return "FORWARD"
+    elif (targetTankAngleGap == 180):
+        return "BACKWARD"
+    else:
+        return "TURN_RIGHT"
