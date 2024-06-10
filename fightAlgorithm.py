@@ -3,9 +3,8 @@ from fight_train_func import *
 
 def testDataForAgent(dataForAgent):
     Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(dataForAgent)
-    
     if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
-        return random.choice(["FORWARD", "BACKWARD", "SHOOT"])
+        return "SHOOT"
 
     enemyAngle = []
     if (e1Dis <= 1200):
@@ -17,10 +16,24 @@ def testDataForAgent(dataForAgent):
 
     minDisEnemyAngle, minEnemyDis = GetMinDisEnemy(gunAngle, enemyAngle)
     if (minEnemyDis <= 300):
-        return meetEnemy(Angle * 45, gunAngle * 45, minDisEnemyAngle)
+        return meetEnemy(Angle, gunAngle, minDisEnemyAngle)
     else:
-        return moveToEnemy(Angle * 45, minDisEnemyAngle)
+        return moveToEnemy(Angle, minDisEnemyAngle)
 
+def testQtableData(QtableData):
+    targetAngleDiscrete, AngleDiscrete, gunAngleDiscrete, Aim, minDistanceDiscrete = QtableData
 
+    targetAngle = targetAngleDiscrete * 45
+    Angle = AngleDiscrete * 45
+    gunAngle = gunAngleDiscrete * 45
+
+    if (Aim == 2):
+        return random.choice(["FORWARD", "BACKWARD", "SHOOT"])
+    
+    if (minDistanceDiscrete == 0):
+        return meetEnemy(Angle, gunAngle, targetAngle)
+
+    else:
+        return moveToEnemy(Angle, targetAngle)
 
 

@@ -9,7 +9,7 @@ from fightAlgorithm import *
 c = fight_env(trainMode="plain.tmx")#map_0_v_0.tmx
 
 rewards = [0, 0, 0, 0, 0, 0, 0]
-for i in range(1):
+for i in range(3):
     data = c.reset()
 
    
@@ -31,6 +31,9 @@ for i in range(1):
             action = testDataForAgent(state)
             updateData[playerID] = [action]
             actions[playerID] = action
+
+            
+            
             
     
             
@@ -40,18 +43,17 @@ for i in range(1):
         for j in range(1, 7):
             playerID = str(j) + "P"
             new_state, liveLoss, scoreUp = data[playerID]
-
+            
 
             reward = rewardFunction(oldState[playerID], \
                                     actions[playerID], scoreUp, liveLoss)
-            rewards[j] += reward
+            if (c.lives[j] != 0):
+                rewards[j] += reward
             done = int(c.lives[j] == 0)
-            if (j == 1 and reward != 0.1):
-                print(reward)
 
             
 
 for i in range(1, 7):
-    print(rewards[i] / 100, end=" ")
+    print(rewards[i] / 1, end=" ")
 pygame.quit()
 

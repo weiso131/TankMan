@@ -6,12 +6,15 @@ from attack_train_func import *
 """
 
 def getDataForAgent(data, graph):
-    Angle = ((data['angle'] + 540) % 360) / 45
+
+
+
+    Angle = (data['angle'] + 540) % 360
     x = data['x'] + 12.5 + 5 * (Angle * 45 % 90 != 0)
     y = data['y'] + 12.5 + 5 * (Angle * 45 % 90 != 0)
     
-    gunAngle = ((data['gun_angle'] + 540) % 360) / 45
-    hitTmDis = shootTeamMate(data, x, y, (data['gun_angle'] + 540) % 360)
+    gunAngle = (data['gun_angle'] + 540) % 360
+    hitTmDis = shootTeamMate(data, x, y, gunAngle)
     
 
     enemy_info = data['competitor_info']
@@ -20,11 +23,13 @@ def getDataForAgent(data, graph):
     e2x, e2y = enemy_info[1]['x'] + 12.5 + 5 * (enemy_info[1]['angle'] % 90 != 0), enemy_info[1]['y'] + 12.5 + 5 * (enemy_info[1]['angle'] % 90 != 0)
     e3x, e3y = enemy_info[2]['x'] + 12.5 + 5 * (enemy_info[2]['angle'] % 90 != 0), enemy_info[2]['y'] + 12.5 + 5 * (enemy_info[2]['angle'] % 90 != 0)
 
-    
 
-    e1Aim, e2Aim, e3Aim = isAimToYou(x, y, (data['gun_angle'] + 540) % 360, e1x, e1y, hitTmDis) * int(enemy_info[0]['lives'] != 0), \
-                            isAimToYou(x, y, (data['gun_angle'] + 540) % 360, e2x, e2y, hitTmDis) * int(enemy_info[1]['lives'] != 0),\
-                            isAimToYou(x, y, (data['gun_angle'] + 540) % 360, e3x, e3y, hitTmDis) * int(enemy_info[2]['lives'] != 0)
+    cooldown = data['cooldown']
+      
+
+    e1Aim, e2Aim, e3Aim = isAimToYou(x, y, gunAngle, e1x, e1y, hitTmDis, enemy_info[0]['lives'], cooldown), \
+                            isAimToYou(x, y, gunAngle, e2x, e2y, hitTmDis, enemy_info[1]['lives'], cooldown),\
+                            isAimToYou(x, y, gunAngle, e3x, e3y, hitTmDis, enemy_info[2]['lives'], cooldown) 
     
     e1Dis = min(getDistance(e1x, e1y, x, y) + int(enemy_info[0]['lives'] == 0) * 1300, 1300)
     e2Dis = min(getDistance(e2x, e2y, x, y) + int(enemy_info[1]['lives'] == 0) * 1300, 1300)
@@ -38,20 +43,48 @@ def getDataForAgent(data, graph):
     return [Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis]
 
 def normalizeData(DataForAgent):
-    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(DataForAgent)
+    targetAngleDiscrete, AngleDiscrete, gunAngleDiscrete, Aim, minDistanceDiscrete = getQTableData(DataForAgent)
 
-    return Angle / 8, gunAngle / 8, e1Angle / 360, e2Angle / 360, e3Angle / 360, \
-        e1Aim, e2Aim, e3Aim, e1Dis / 1300, e2Dis / 1300, e3Dis / 1300
+    return targetAngleDiscrete / 7, AngleDiscrete / 7, gunAngleDiscrete / 7, Aim / 2, minDistanceDiscrete / 1
 
     #加上distance的資訊
 
+def getQTableData(DataForAgent):
+    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(DataForAgent)
+    enemyAngle = []
+    if (e1Dis <= 1200):
+        enemyAngle.append((e1Angle, e1Dis))
+    if (e2Dis <= 1200):
+        enemyAngle.append((e2Angle, e2Dis))
+    if (e3Dis <= 1200):
+        enemyAngle.append((e3Angle, e3Dis))
 
+    minDisEnemyAngle, minEnemyDis = GetMinDisEnemy(gunAngle, enemyAngle)
+
+    targetAngleDiscrete = int((minDisEnemyAngle + 22.5) / 45) % 8 #0 ~ 7
+    AngleDiscrete = int(Angle / 45) % 8 #0 ~ 7
+    gunAngleDiscrete = int(gunAngle / 45) % 8 #0 ~ 7
+
+    Aim = 1 #0會打到隊友，1沒事，2會打到敵人
+    if (e1Aim == -1 or e2Aim == -1 or e3Aim == -1):
+        Aim = 0
+    elif (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
+        Aim = 2
+
+    minDistanceDiscrete = 0 #0代表有人在範圍內，1代表沒人
+    if (minEnemyDis > 300):
+        minDistanceDiscrete = 1
+
+
+    return targetAngleDiscrete, AngleDiscrete, gunAngleDiscrete, Aim, minDistanceDiscrete
 
 
 def rewardFunction(DataForAgent, action : str, score, livesLoss):
-    reward = score / 10 + livesLoss * 2
+    e1Aim, e2Aim, e3Aim = DataForAgent[5], DataForAgent[6], DataForAgent[7]
+    reward = 0
 
-    
+    if (e1Aim == -1 or e2Aim == -1 or e3Aim == -1) and action == 'SHOOT':
+        return -1
 
     predict = coach(DataForAgent)
 
@@ -59,56 +92,14 @@ def rewardFunction(DataForAgent, action : str, score, livesLoss):
         return reward + 0.01
     else:
         return reward + -0.01
-    #Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(DataForAgent)
-
-    # Angle *= 45
-    # gunAngle *= 45
-
-
-    # enemyAngle = []
-    # if (e1Dis <= 1200):
-    #     enemyAngle.append((e1Angle, e1Dis))
-    # if (e2Dis <= 1200):
-    #     enemyAngle.append((e2Angle, e2Dis))
-    # if (e3Dis <= 1200):
-    #     enemyAngle.append((e3Angle, e3Dis))
-
-    # minDisEnemyAngle, minEnemyDis = GetMinDisEnemy(gunAngle, enemyAngle)
-    # targetGunAngleGap = gunAngle - minDisEnemyAngle
-    # targetTankAngleGap = (Angle - (int((minDisEnemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
-
-
-    # if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
-    #     if (action == "SHOOT"):
-    #         reward += 1
-    #     elif ()
-
-    # elif (action == "SHOOT"):
-    #     if (e1Aim == -1 or e2Aim == -1 or e3Aim == -1):
-    #         reward -= 10
-    #     else:
-    #         reward -= 0.5
-    
-    # if (minEnemyDis <= 300):
-        
-    #     if (np.cos(targetGunAngleGap / 180 * np.pi) >= 1 / (2 ** 0.5)):
-    #         reward += 0.05
-    #     else:
-    #         reward -= 0.03
-    #     if (targetTankAngleGap % 180 != 0 and targetTankAngleGap % 90 == 0):
-    #         reward += 0.05
-    #     else:
-    #         reward -= 0.03
-    
-
-
-    return reward
+      
 
 def coach(dataForAgent)->list:
+    #注意角度
     Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(dataForAgent)
     
     if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
-        return ["FORWARD", "BACKWARD", "SHOOT"]
+        return ["SHOOT"]
 
     enemyAngle = []
     if (e1Dis <= 1200):
@@ -120,9 +111,9 @@ def coach(dataForAgent)->list:
 
     minDisEnemyAngle, minEnemyDis = GetMinDisEnemy(gunAngle, enemyAngle)
     if (minEnemyDis <= 300):
-        return meetEnemyForReward(Angle * 45, gunAngle * 45, minDisEnemyAngle)
+        return meetEnemyForReward(Angle, gunAngle, minDisEnemyAngle)
     else:
-        return [moveToEnemy(Angle * 45, minDisEnemyAngle)]
+        return [moveToEnemy(Angle, minDisEnemyAngle)]
 
 def meetEnemyForReward(tankAngle, gunAngle, enemyAngle):
     targetGunAngleGap = gunAngle - enemyAngle
@@ -140,6 +131,7 @@ def meetEnemyForReward(tankAngle, gunAngle, enemyAngle):
     else:
         return ["AIM_RIGHT"]
 def GetMinDisEnemy(gunAngle, enemyAngleDis):
+    
     enemyAngle = gunAngle
     minEnemyDis = 1e4
     for angle, dis in enemyAngleDis:
@@ -151,13 +143,14 @@ def GetMinDisEnemy(gunAngle, enemyAngleDis):
 def meetEnemy(tankAngle, gunAngle, enemyAngle):
     targetGunAngleGap = gunAngle - enemyAngle
     targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
-    if (np.cos(targetGunAngleGap / 180 * np.pi) >= 1 / (2 ** 0.5)):
+    if (np.cos(targetGunAngleGap / 180 * np.pi) >= 3 ** 0.5 / 2):
+        print(targetGunAngleGap)
         if (targetTankAngleGap % 180 == 0 or targetTankAngleGap % 180 == 135):
             return "TURN_RIGHT"
         elif (targetTankAngleGap % 180 == 45):
             return "TURN_LEFT"
         else:
-            return random.choice(["FORWARD", "BACKWARD"])
+            return "FORWARD"
     
     elif (np.sin(targetGunAngleGap / 180 * np.pi) < 0):
         return "AIM_LEFT"
@@ -165,6 +158,7 @@ def meetEnemy(tankAngle, gunAngle, enemyAngle):
         return "AIM_RIGHT"
     
 def moveToEnemy(tankAngle, enemyAngle):
+    
     targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
 
     if (targetTankAngleGap == 0):
@@ -172,4 +166,5 @@ def moveToEnemy(tankAngle, enemyAngle):
     elif (targetTankAngleGap == 180):
         return "BACKWARD"
     else:
+        #print(targetTankAngleGap)
         return "TURN_RIGHT"
