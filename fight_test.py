@@ -47,6 +47,8 @@ for i in range(3):
 
             reward = rewardFunction(oldState[playerID], \
                                     actions[playerID], scoreUp, liveLoss)
+            
+            
             if (c.lives[j] != 0):
                 rewards[j] += reward
             done = int(c.lives[j] == 0)

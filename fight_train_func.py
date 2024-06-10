@@ -47,7 +47,6 @@ def normalizeData(DataForAgent):
 
     return targetAngleDiscrete / 7, AngleDiscrete / 7, gunAngleDiscrete / 7, Aim / 2, minDistanceDiscrete / 1
 
-    #加上distance的資訊
 
 def getQTableData(DataForAgent):
     Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(DataForAgent)
@@ -118,13 +117,13 @@ def coach(dataForAgent)->list:
 def meetEnemyForReward(tankAngle, gunAngle, enemyAngle):
     targetGunAngleGap = gunAngle - enemyAngle
     targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
-    if (np.cos(targetGunAngleGap / 180 * np.pi) >= 1 / (2 ** 0.5)):
+    if (np.cos(targetGunAngleGap / 180 * np.pi) >= 3 ** 0.5 / 2):
         if (targetTankAngleGap % 180 == 0 or targetTankAngleGap % 180 == 135):
             return ["TURN_RIGHT"]
         elif (targetTankAngleGap % 180 == 45):
             return ["TURN_LEFT"]
         else:
-            return ["FORWARD", "BACKWARD"]
+            return ["FORWARD"]
     
     elif (np.sin(targetGunAngleGap / 180 * np.pi) < 0):
         return ["AIM_LEFT"]
@@ -144,7 +143,6 @@ def meetEnemy(tankAngle, gunAngle, enemyAngle):
     targetGunAngleGap = gunAngle - enemyAngle
     targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
     if (np.cos(targetGunAngleGap / 180 * np.pi) >= 3 ** 0.5 / 2):
-        print(targetGunAngleGap)
         if (targetTankAngleGap % 180 == 0 or targetTankAngleGap % 180 == 135):
             return "TURN_RIGHT"
         elif (targetTankAngleGap % 180 == 45):
@@ -166,5 +164,4 @@ def moveToEnemy(tankAngle, enemyAngle):
     elif (targetTankAngleGap == 180):
         return "BACKWARD"
     else:
-        #print(targetTankAngleGap)
         return "TURN_RIGHT"
