@@ -26,6 +26,7 @@ class tankeEnvBase():
                     self.blue_team_num, self.is_manual, self.frame, self.sound, trainMode=trainMode)
 
         self.actionSpace = ["AIM_RIGHT", "AIM_LEFT", "SHOOT", "FORWARD", "BACKWARD", "TURN_RIGHT", "TURN_LEFT", "NONE"]
+        self.actionID = {"AIM_RIGHT" : 0, "AIM_LEFT" : 1, "SHOOT" : 2, "FORWARD" : 3, "BACKWARD" : 4, "TURN_RIGHT" : 5, "TURN_LEFT" : 6, "NONE" : 7}
         self.scores = [0, 0, 0, 0, 0, 0, 0]
         self.lives = [0, 3, 3, 3, 3, 3, 3]
 
@@ -68,6 +69,6 @@ class tankeEnvBase():
         return MapGraph
 
     def getDataForAllAgent(self)->dict:
-        pass
+        return self.game.get_data_from_game_to_player()
 
 

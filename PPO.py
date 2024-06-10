@@ -123,7 +123,6 @@ class PPO():
                 
                 policyNetworkPredict = self.PolicyNetwork(state).gather(1, action)
                 
-                assert not check_for_nans(self.PolicyNetwork(state), "self.PolicyNetwork(state)")
 
                 predict = policyNetworkPredict
 
@@ -138,8 +137,7 @@ class PPO():
 
                 policy_loss = torch.mean(-torch.min(surr1, surr2))
                 value_loss = torch.mean(F.mse_loss(self.ValueNetwork(state), V_target.detach()))
-
-                assert not check_for_nans(policy_loss, "policy_loss")      
+  
 
                 optimizer_policy.zero_grad()
                 optimizer_value.zero_grad()
@@ -149,16 +147,12 @@ class PPO():
                     policy_loss.backward()
                     value_loss.backward()
 
-                replace_nan_with_zero(self.PolicyNetwork)
-                replace_nan_with_zero(self.ValueNetwork)
+
                 optimizer_policy.step()
                 optimizer_value.step()
 
                 
-                if (check_for_nans(self.PolicyNetwork.fc1.weight, "fc1 weight")):
-                    print(policy_loss)
-                    print(policy_loss.grad)
-                    assert False
+
 
 
                 totalPolicyLoss += policy_loss.item()
@@ -174,14 +168,3 @@ class PPO():
 
 
 
-def check_for_nans(tensor, name="tensor"):
-    if torch.isnan(tensor).any():
-        print(f"{name} contains NaN values")
-        print(tensor)
-        return True
-    return False
-
-def replace_nan_with_zero(model):
-    for name, param in model.named_parameters():
-        if param.grad is not None:
-            param.grad.data = torch.nan_to_num(param.grad.data, nan=0.0)

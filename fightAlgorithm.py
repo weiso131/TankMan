@@ -20,8 +20,6 @@ def testDataForAgent(dataForAgent):
         return meetEnemy(Angle * 45, gunAngle * 45, minDisEnemyAngle)
     else:
         return moveToEnemy(Angle * 45, minDisEnemyAngle)
-    
-
 
 
 
