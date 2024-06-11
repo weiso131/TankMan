@@ -12,8 +12,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from weiso.Q_learing import Q_learning
 from weiso.fight_func import getDataForAgent, getQTableData
-from weiso.usefulFunction import getMapGraph, getTank
-from weiso.wall_break import haveWall, ShootWall, haveWallFourWay
+from weiso.usefulFunction import getMapGraph, getTank, graphThisAngle
+from weiso.wall_break import  ShootWall, haveWallFourWay
 
 
 
@@ -51,10 +51,14 @@ class MLPlay:
 
             action = self.fightAgent.step(state)
 
+        forwardDis = graphThisAngle(x, y, angle, graph)
 
+        if (forwardDis > 1):
+            return ["FORWARD"]
+        else:
+            return ["TURN_RIGHT"]
 
-
-        return [action]
+        return ["NONE"]
         
 
     def reset(self):

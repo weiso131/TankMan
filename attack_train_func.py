@@ -47,12 +47,6 @@ def shootTeamMate(data, selfX, selfY, gunAngle):
                 teamMateShoot = tmDis  
     return teamMateShoot
 
-def teamMateAngle():
-    """
-    取得八個方向哪些有隊友存在
-    """
-
-
 
 def PosNag(num):
     """

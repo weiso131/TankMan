@@ -75,39 +75,51 @@ def getTargetAngle(selfX, selfY, targetX, targetY, dis):
 
 def getTank(data):
     Angle = (data['angle'] + 540) % 360
-    return data['x'] + 12.5 + 5 * int(Angle % 90 != 0), data['y'] + 12.5 + 5 * int(Angle % 90 != 0), (Angle + 540) % 360, (data['gun_angle'] + 540) % 360
+    return data['x'] + 12.5 + 5 * int(Angle % 90 != 0), data['y'] + 12.5 + 5 * int(Angle % 90 != 0), Angle, (data['gun_angle'] + 540) % 360
 
 
 def graphThisAngle(x, y, angle, graph):
     """
     angle : 0, 45, 90, ...
 
-    value : -1邊界
-
-    value : 1 牆壁
-
-    value : 2 隊友
-
-    return: 走幾步碰到某個值, 該值
+    return: 走幾步碰到邊界或牆壁
     """
-    cos, sin = PosNag(cos(angle)), PosNag(sin(angle))
+    cos, sin = PosNag(np.cos(angle / 180 * np.pi)), -PosNag(np.sin(angle / 180 * np.pi))
 
     graphX, graphY = int(x / 25), int(y / 25)
 
-    takeLeft = (-sin, -cos)
-    takeRight = (sin, cos)
-    if (angle % 90 == 0):
-        takeLeft = (0, -1)
-        takeRight = (-1, 0)
+    step = 0
 
-    step = 1
-    value = -1
-    while (step * cos + graphX):
-        step += 1
-    
+
+    if (angle % 90 == 0):   
+        while (step * cos + graphX < 40 and step * cos + graphX >= 0 and\
+               step * sin + graphY < 24 and step * sin + graphY >= 0):
+            
+            if (graph[step * sin + graphY, step * cos + graphX] != 0):
+                break
+
+            if (graph[step * sin + graphY + cos, step * cos + graphX + sin] != 0 and\
+                graph[graphY + cos, graphX + sin] == 0):
+                break
+            if (graph[step * sin + graphY - cos, step * cos + graphX - sin] != 0 and\
+                graph[graphY - cos, graphX - sin] == 0):
+                break
+            step += 1
+
+    else:
+        while (step * cos + graphX < 40 and step * cos + graphX >= 0 and\
+               step * sin + graphY < 24 and step * sin + graphY >= 0):
+            
+            if (graph[step * sin + graphY, step * cos + graphX] != 0):
+                break
+            if (graph[step * sin + graphY , step * cos + graphX - cos] != 0 and step != 0):
+                break
+            if (graph[step * sin + graphY - sin, step * cos + graphX] != 0 and step != 0):
+                break
+            step += 1
     
         
 
 
 
-    return step, value
+    return step
