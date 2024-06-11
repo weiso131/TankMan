@@ -88,7 +88,7 @@ def graphThisAngle(x, y, angle, graph):
 
     graphX, graphY = int(x / 25), int(y / 25)
 
-    step = 0
+    step = 1
 
 
     if (angle % 90 == 0):   
@@ -98,10 +98,14 @@ def graphThisAngle(x, y, angle, graph):
             if (graph[step * sin + graphY, step * cos + graphX] != 0):
                 break
 
-            if (graph[step * sin + graphY + cos, step * cos + graphX + sin] != 0 and\
+            if (graphX + sin < 40 and graphX + sin >= 0 and\
+                graphY + cos < 24 and graphY + cos >= 0 and\
+                graph[step * sin + graphY + cos, step * cos + graphX + sin] != 0 and\
                 graph[graphY + cos, graphX + sin] == 0):
                 break
-            if (graph[step * sin + graphY - cos, step * cos + graphX - sin] != 0 and\
+            if (graphX - sin < 40 and graphX - sin >= 0 and\
+                graphY - cos < 24 and graphY - cos >= 0 and\
+                graph[step * sin + graphY - cos, step * cos + graphX - sin] != 0 and\
                 graph[graphY - cos, graphX - sin] == 0):
                 break
             step += 1
@@ -112,14 +116,10 @@ def graphThisAngle(x, y, angle, graph):
             
             if (graph[step * sin + graphY, step * cos + graphX] != 0):
                 break
-            if (graph[step * sin + graphY , step * cos + graphX - cos] != 0 and step != 0):
+            if (step != 0 and graph[step * sin + graphY , step * cos + graphX - cos] != 0):
                 break
-            if (graph[step * sin + graphY - sin, step * cos + graphX] != 0 and step != 0):
+            if (step != 0 and graph[step * sin + graphY - sin, step * cos + graphX] != 0):
                 break
             step += 1
-    
-        
-
-
 
     return step

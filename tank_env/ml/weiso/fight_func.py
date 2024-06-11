@@ -7,7 +7,7 @@ from usefulFunction import *
 
 
 
-def getDataForAgent(data, graph):
+def getDataForAgent(data, graph, avoidDirect):
 
 
 
@@ -42,10 +42,10 @@ def getDataForAgent(data, graph):
     e3Angle = getTargetAngle(0, 0, e3x - x, e3y - y, e3Dis)
 
 
-    return [Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis]
+    return [Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis, avoidDirect]
 
 def getQTableData(DataForAgent):
-    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(DataForAgent)
+    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis, avoidDirect = tuple(DataForAgent)
     enemyAngle = []
     if (e1Dis <= 1200):
         enemyAngle.append((e1Angle, e1Dis))
@@ -60,18 +60,16 @@ def getQTableData(DataForAgent):
     AngleDiscrete = int(Angle / 45) % 8 #0 ~ 7
     gunAngleDiscrete = int(gunAngle / 45) % 8 #0 ~ 7
 
-    Aim = 1 #0會打到隊友，1沒事，2會打到敵人
-    if (e1Aim == -1 or e2Aim == -1 or e3Aim == -1):
-        Aim = 0
-    elif (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
-        Aim = 2
+    Aim = 0 #0會打到隊友，1沒事，2會打到敵人
+    if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
+        Aim = 1
 
     minDistanceDiscrete = 0 #0代表有人在範圍內，1代表沒人
     if (minEnemyDis > 300):
         minDistanceDiscrete = 1
 
 
-    return targetAngleDiscrete, AngleDiscrete, gunAngleDiscrete, Aim, minDistanceDiscrete
+    return targetAngleDiscrete, AngleDiscrete, gunAngleDiscrete, Aim, minDistanceDiscrete, avoidDirect
 
 def GetMinDisEnemy(gunAngle, enemyAngleDis):
     

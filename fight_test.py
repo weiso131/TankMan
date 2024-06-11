@@ -9,6 +9,9 @@ from fightAlgorithm import *
 c = fight_env(trainMode="plain.tmx")#map_0_v_0.tmx
 
 rewards = [0, 0, 0, 0, 0, 0, 0]
+
+
+
 for i in range(3):
     data = c.reset()
 
@@ -16,6 +19,8 @@ for i in range(3):
     lives = [0, 3, 3, 3, 3, 3, 3]
     scores = [0, 0, 0, 0, 0, 0, 0]
     
+
+
     while (c.not_done()):
         c.render()
         
@@ -26,17 +31,13 @@ for i in range(3):
         for j in range(1, 7):
             playerID = str(j) + "P"
 
+
+
             state, _, _ = data[playerID]
             oldState[playerID] = state
             action = testDataForAgent(state)
             updateData[playerID] = [action]
             actions[playerID] = action
-
-            
-            
-            
-    
-            
 
         data = c.update(updateData)  
 
@@ -48,7 +49,8 @@ for i in range(3):
             reward = rewardFunction(oldState[playerID], \
                                     actions[playerID], scoreUp, liveLoss)
             
-            
+            if (reward < 0):
+                print(reward)
             rewards[j] += reward
             done = int(c.lives[j] == 0)
 

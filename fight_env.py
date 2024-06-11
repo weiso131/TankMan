@@ -1,7 +1,7 @@
 
 
 from tank_env.tank_env import tankeEnvBase
-from fight_train_func import getDataForAgent, PosNag
+from fight_train_func import getDataForAgent, PosNag, graphThisAngle
 
 import numpy as np
 class fight_env(tankeEnvBase):
@@ -15,19 +15,29 @@ class fight_env(tankeEnvBase):
                             '5P_bullet' : (-1, -1, -1, -1),
                             '6P_bullet' : (-1, -1, -1, -1),}
         
+        self.avoidDirect = [0, 0, 0, 0, 0, 0, 0]
+        
     
     def getDataForAllAgent(self)->dict:
 
         data = self.game.get_data_from_game_to_player()
 
-
+        
 
         DataForAgents = {}#state, lives, scores
         graph = self.getMapGraph(data['1P'])
         self.getBullet(data['1P'], graph)
         for i in range(1, 7):
             playerID = str(i) + "P"
-            DataForAgents[playerID] = (getDataForAgent(data[playerID], graph), 
+            x, y, tankeAngle, _ = getTank(data[playerID])
+
+            if ((self.avoidDirect[i] == 0 and graphThisAngle(x, y, tankeAngle, graph) <= 1) or\
+                (self.avoidDirect[i] == 1 and graphThisAngle(x, y, (tankeAngle + 180) % 360, graph) <= 1)):
+                self.avoidDirect[i] = abs(self.avoidDirect[i] - 1)
+
+
+            
+            DataForAgents[playerID] = (getDataForAgent(data[playerID], graph, self.avoidDirect[i]), 
                                        data[playerID]['lives'] - self.lives[i], 
                                        data[playerID]['score'] - self.scores[i])
             self.scores[i] = data[playerID]['score']
@@ -63,4 +73,6 @@ class fight_env(tankeEnvBase):
         
 
 
-    
+def getTank(data):
+    Angle = (data['angle'] + 540) % 360
+    return data['x'] + 12.5 + 5 * int(Angle % 90 != 0), data['y'] + 12.5 + 5 * int(Angle % 90 != 0), Angle, (data['gun_angle'] + 540) % 360

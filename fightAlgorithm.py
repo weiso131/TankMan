@@ -2,7 +2,7 @@
 from fight_train_func import *
 
 def testDataForAgent(dataForAgent):
-    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(dataForAgent)
+    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis, avoidDirect = tuple(dataForAgent)
     if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
         return "SHOOT"
 
@@ -16,7 +16,7 @@ def testDataForAgent(dataForAgent):
 
     minDisEnemyAngle, minEnemyDis = GetMinDisEnemy(gunAngle, enemyAngle)
     if (minEnemyDis <= 300):
-        return meetEnemy(Angle, gunAngle, minDisEnemyAngle)
+        return meetEnemy(Angle, gunAngle, minDisEnemyAngle, avoidDirect)
     else:
         
         return moveToEnemy(Angle, minDisEnemyAngle)

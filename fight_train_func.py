@@ -5,7 +5,7 @@ from attack_train_func import *
 殺紅眼的戰車
 """
 
-def getDataForAgent(data, graph):
+def getDataForAgent(data, graph, avoidDirect):
 
 
 
@@ -40,7 +40,7 @@ def getDataForAgent(data, graph):
     e3Angle = getTargetAngle(0, 0, e3x - x, e3y - y, e3Dis)
 
 
-    return [Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis]
+    return [Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis, avoidDirect]
 
 def normalizeData(DataForAgent):
     targetAngleDiscrete, AngleDiscrete, gunAngleDiscrete, Aim, minDistanceDiscrete = getQTableData(DataForAgent)
@@ -49,7 +49,7 @@ def normalizeData(DataForAgent):
 
 
 def getQTableData(DataForAgent):
-    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(DataForAgent)
+    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis, avoidDirect = tuple(DataForAgent)
     enemyAngle = []
     if (e1Dis <= 1200):
         enemyAngle.append((e1Angle, e1Dis))
@@ -64,27 +64,20 @@ def getQTableData(DataForAgent):
     AngleDiscrete = int(Angle / 45) % 8 #0 ~ 7
     gunAngleDiscrete = int(gunAngle / 45) % 8 #0 ~ 7
 
-    Aim = 1 #0會打到隊友，1沒事，2會打到敵人
-    if (e1Aim == -1 or e2Aim == -1 or e3Aim == -1):
-        Aim = 0
-    elif (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
-        Aim = 2
+    Aim = 0 #0會打到隊友，1沒事，2會打到敵人
+    if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
+        Aim = 1
 
     minDistanceDiscrete = 0 #0代表有人在範圍內，1代表沒人
     if (minEnemyDis > 300):
         minDistanceDiscrete = 1
 
 
-    return targetAngleDiscrete, AngleDiscrete, gunAngleDiscrete, Aim, minDistanceDiscrete
+    return targetAngleDiscrete, AngleDiscrete, gunAngleDiscrete, Aim, minDistanceDiscrete, avoidDirect
 
 
 def rewardFunction(DataForAgent, action : str, score, livesLoss):
-    e1Aim, e2Aim, e3Aim = DataForAgent[5], DataForAgent[6], DataForAgent[7]
     reward = 0
-
-    # if (e1Aim == -1 or e2Aim == -1 or e3Aim == -1) and action == 'SHOOT':
-    #     return -1
-
     predict = coach(DataForAgent)
 
     if (action in predict):
@@ -95,7 +88,7 @@ def rewardFunction(DataForAgent, action : str, score, livesLoss):
 
 def coach(dataForAgent)->list:
     #注意角度
-    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(dataForAgent)
+    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis, avoidDirect = tuple(dataForAgent)
     
     if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
         return ["SHOOT"]
@@ -110,11 +103,11 @@ def coach(dataForAgent)->list:
 
     minDisEnemyAngle, minEnemyDis = GetMinDisEnemy(gunAngle, enemyAngle)
     if (minEnemyDis <= 300):
-        return meetEnemyForReward(Angle, gunAngle, minDisEnemyAngle)
+        return meetEnemyForReward(Angle, gunAngle, minDisEnemyAngle, avoidDirect)
     else:
         return [moveToEnemy(Angle, minDisEnemyAngle)]
 
-def meetEnemyForReward(tankAngle, gunAngle, enemyAngle):
+def meetEnemyForReward(tankAngle, gunAngle, enemyAngle, avoidDirect):
     targetGunAngleGap = gunAngle - enemyAngle
     targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
     if (np.cos(targetGunAngleGap / 180 * np.pi) >= 3 ** 0.5 / 2):
@@ -122,8 +115,10 @@ def meetEnemyForReward(tankAngle, gunAngle, enemyAngle):
             return ["TURN_RIGHT"]
         elif (targetTankAngleGap % 180 == 45):
             return ["TURN_LEFT"]
-        else:
+        elif (avoidDirect == 0):
             return ["FORWARD"]
+        else:
+            return ["BACKWARD"]
     
     elif (np.sin(targetGunAngleGap / 180 * np.pi) < 0):
         return ["AIM_LEFT"]
@@ -139,7 +134,7 @@ def GetMinDisEnemy(gunAngle, enemyAngleDis):
             enemyAngle = angle
     return enemyAngle, minEnemyDis
 
-def meetEnemy(tankAngle, gunAngle, enemyAngle):
+def meetEnemy(tankAngle, gunAngle, enemyAngle, avoidDirect):
     targetGunAngleGap = gunAngle - enemyAngle
     targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
     if (np.cos(targetGunAngleGap / 180 * np.pi) >= 3 ** 0.5 / 2):
@@ -147,8 +142,10 @@ def meetEnemy(tankAngle, gunAngle, enemyAngle):
             return "TURN_RIGHT"
         elif (targetTankAngleGap % 180 == 45):
             return "TURN_LEFT"
-        else:
+        elif (avoidDirect == 0):
             return "FORWARD"
+        else:
+            return "BACKWARD"
     
     elif (np.sin(targetGunAngleGap / 180 * np.pi) < 0):
         return "AIM_LEFT"
@@ -165,3 +162,50 @@ def moveToEnemy(tankAngle, enemyAngle):
         return "BACKWARD"
     else:
         return "TURN_RIGHT"
+    
+
+def graphThisAngle(x, y, angle, graph):
+    """
+    angle : 0, 45, 90, ...
+
+    return: 走幾步碰到邊界或牆壁
+    """
+    cos, sin = PosNag(np.cos(angle / 180 * np.pi)), -PosNag(np.sin(angle / 180 * np.pi))
+
+    graphX, graphY = int(x / 25), int(y / 25)
+
+    step = 1
+
+
+    if (angle % 90 == 0):   
+        while (step * cos + graphX < 40 and step * cos + graphX >= 0 and\
+               step * sin + graphY < 24 and step * sin + graphY >= 0):
+            
+            if (graph[step * sin + graphY, step * cos + graphX] != 0):
+                break
+
+            if (graphX + sin < 40 and graphX + sin >= 0 and\
+                graphY + cos < 24 and graphY + cos >= 0 and\
+                graph[step * sin + graphY + cos, step * cos + graphX + sin] != 0 and\
+                graph[graphY + cos, graphX + sin] == 0):
+                break
+            if (graphX - sin < 40 and graphX - sin >= 0 and\
+                graphY - cos < 24 and graphY - cos >= 0 and\
+                graph[step * sin + graphY - cos, step * cos + graphX - sin] != 0 and\
+                graph[graphY - cos, graphX - sin] == 0):
+                break
+            step += 1
+
+    else:
+        while (step * cos + graphX < 40 and step * cos + graphX >= 0 and\
+               step * sin + graphY < 24 and step * sin + graphY >= 0):
+            
+            if (graph[step * sin + graphY, step * cos + graphX] != 0):
+                break
+            if (step != 0 and graph[step * sin + graphY , step * cos + graphX - cos] != 0):
+                break
+            if (step != 0 and graph[step * sin + graphY - sin, step * cos + graphX] != 0):
+                break
+            step += 1
+
+    return step
