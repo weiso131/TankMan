@@ -49,10 +49,10 @@ def shootTeamMate(data, selfX, selfY, gunAngle):
     for tm in data['teammate_info']:
         if (tm['id'] == data['id']):
             continue
-        tmDis = getDistance(selfX, selfY, tm['x'], tm['y'])
+        tmX, tmY = tm['x'] + 12.5 + 5 * (tm['angle'] % 90 != 0), tm['y'] + 12.5 + 5 * (tm['angle'] % 90 != 0)
+        tmDis = getDistance(selfX, selfY, tmX, tmY)
         if (tmDis != 0 and tm['lives'] > 0):
-            if (Shoot(selfX, selfY, gunAngle, tm['x'], tm['y'], tmDis) == "SHOOT" and tmDis < teamMateShoot):
-                print(data['id'], tm['id'])
+            if (Shoot(selfX, selfY, gunAngle, tmX, tmY, tmDis) == "SHOOT" and tmDis < teamMateShoot):
                 teamMateShoot = tmDis  
     return teamMateShoot
 def Shoot(selfX, selfY, gunAngle, targetX, targetY, dis):
@@ -75,7 +75,7 @@ def getTargetAngle(selfX, selfY, targetX, targetY, dis):
 
 def getTank(data):
     Angle = (data['angle'] + 540) % 360
-    return data['x'] + 12.5 + 5 * (Angle % 90 != 0), data['y'] + 12.5 + 5 * (Angle % 90 != 0), (Angle + 540) % 360, (data['gun_angle'] + 540) % 360
+    return data['x'] + 12.5 + 5 * int(Angle % 90 != 0), data['y'] + 12.5 + 5 * int(Angle % 90 != 0), (Angle + 540) % 360, (data['gun_angle'] + 540) % 360
 
 
 def graphThisAngle(x, y, angle, graph):

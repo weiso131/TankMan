@@ -40,10 +40,10 @@ def shootTeamMate(data, selfX, selfY, gunAngle):
     for tm in data['teammate_info']:
         if (tm['id'] == data['id']):
             continue
-        if ((tm['x'] != selfX or tm['y'] != selfY) and tm['lives'] > 0):
-            tmDis = getDistance(selfX, selfY, tm['x'], tm['y'])
-            
-            if (Shoot(selfX, selfY, gunAngle, tm['x'], tm['y'], tmDis) == "SHOOT" and tmDis < teamMateShoot):
+        tmX, tmY = tm['x'] + 12.5 + 5 * (tm['angle'] % 90 != 0), tm['y'] + 12.5 + 5 * (tm['angle'] % 90 != 0)
+        tmDis = getDistance(selfX, selfY, tmX, tmY)
+        if (tmDis != 0 and tm['lives'] > 0):
+            if (Shoot(selfX, selfY, gunAngle, tmX, tmY, tmDis) == "SHOOT" and tmDis < teamMateShoot):
                 teamMateShoot = tmDis  
     return teamMateShoot
 
