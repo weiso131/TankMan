@@ -40,7 +40,7 @@ def shootTeamMate(data, selfX, selfY, gunAngle):
     for tm in data['teammate_info']:
         if (tm['id'] == data['id']):
             continue
-        tmX, tmY = tm['x'] + 12.5 + 5 * (tm['angle'] % 90 != 0), tm['y'] + 12.5 + 5 * (tm['angle'] % 90 != 0)
+        tmX, tmY = tm['x'] + 12.5 - 5 * (tm['angle'] % 90 != 0), tm['y'] + 12.5 - 5 * (tm['angle'] % 90 != 0)
         tmDis = getDistance(selfX, selfY, tmX, tmY)
         if (tmDis != 0 and tm['lives'] > 0):
             if (Shoot(selfX, selfY, gunAngle, tmX, tmY, tmDis) == "SHOOT" and tmDis < teamMateShoot):
@@ -65,12 +65,12 @@ def PosNag(num):
 
 
 def enemyReach(graph, data):
-    x, y = data['x'] + 12.5 + 5 * int(data['angle'] % 90 == 0), data['y'] + 12.5 + 5 * int(data['angle'] % 90 == 0)
+    x, y = data['x'] + 12.5 - 5 * int(data['angle'] % 90 == 0), data['y'] + 12.5 - 5 * int(data['angle'] % 90 == 0)
     competitor_info = data['competitor_info']
 
     enemyFind = []
     for enemy in competitor_info:
-        enemy_x, enemy_y = enemy['x'] + 12.5 + 5 * int(enemy['angle'] % 90 == 0), enemy['y'] + 12.5 + 5 * int(enemy['angle'] % 90 == 0)
+        enemy_x, enemy_y = enemy['x'] + 12.5 - 5 * int(enemy['angle'] % 90 == 0), enemy['y'] + 12.5 - 5 * int(enemy['angle'] % 90 == 0)
         if ((seeTarget(x, y, enemy_x, enemy_y, graph) or seeTarget(enemy_x, enemy_y, x, y, graph)) \
             and getDistance(x, y, enemy_x, enemy_y) < 350):
             enemyFind.append(enemy)

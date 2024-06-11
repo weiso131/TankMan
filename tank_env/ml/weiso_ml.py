@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from weiso.Q_learing import Q_learning
 from weiso.fight_func import getDataForAgent, getQTableData
-from weiso.usefulFunction import getMapGraph, getTank, graphThisAngle
+from weiso.usefulFunction import *
 from weiso.wall_break import  ShootWall, haveWallFourWay
 
 
@@ -56,8 +56,9 @@ class MLPlay:
         forwardDis = graphThisAngle(x, y, angle, graph)
 
 
+             
 
-        return [action]
+        return [goToTarget(x, y, 600, 300, graph, angle)]
         
 
     def reset(self):
@@ -65,6 +66,8 @@ class MLPlay:
         Reset the status
         """
         print(f"reset Game {self.side}")
+
+
 
 
 #python -m mlgame -f 120 -i ml/weiso_ml.py -i ml/weiso_ml.py -i ml/weiso_ml.py -i ml/weiso_ml.py -i ml/weiso_ml.py -i ml/weiso_ml.py . --green_team_num 3 --blue_team_num 3 --frame_limit 1000

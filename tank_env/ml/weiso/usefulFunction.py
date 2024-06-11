@@ -1,5 +1,5 @@
 import numpy as np
-
+import random 
 def getDistance(x1, y1, x2, y2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
@@ -75,7 +75,7 @@ def getTargetAngle(selfX, selfY, targetX, targetY, dis):
 
 def getTank(data):
     Angle = (data['angle'] + 540) % 360
-    return data['x'] + 12.5 + 5 * int(Angle % 90 != 0), data['y'] + 12.5 + 5 * int(Angle % 90 != 0), Angle, (data['gun_angle'] + 540) % 360
+    return data['x'] + 12.5 - 5 * int(Angle % 90 != 0), data['y'] + 12.5 - 5 * int(Angle % 90 != 0), Angle, (data['gun_angle'] + 540) % 360
 
 
 def graphThisAngle(x, y, angle, graph):
@@ -123,3 +123,44 @@ def graphThisAngle(x, y, angle, graph):
             step += 1
 
     return step
+
+
+def goToTarget(x, y, targetX, targetY, graph, angle):
+    """
+    warning: x, y should be + 12.5 + 5 * int(angle % 90 != 0)
+    """
+    graphX, graphY = int(x / 25), int(y / 25)
+    graphTargetX, graphTargetY = int(targetX / 25), int(targetY / 25)
+
+    xAngle = np.arccos(PosNag(graphTargetX - graphX)) * 180 / np.pi
+    yAngle = np.arcsin(-PosNag(graphTargetY - graphY)) * 180 / np.pi
+
+    
+
+    xDis = abs(graphTargetX - graphX)
+    yDis = abs(graphTargetY - graphY)
+    if (xDis <= graphThisAngle(x, y, xAngle, graph) - 1 and xDis != 0):
+        print(x, y)
+        return turnToAngle(angle, xAngle)
+    elif (yDis <= graphThisAngle(x, y, yAngle, graph) - 1 and yDis != 0):
+        print(x, y)
+        return turnToAngle(angle, yAngle)
+    elif (xDis == 0 and yDis == 0):
+        return "SHOOT"
+    else:
+        return "NONE"
+
+def turnToAngle(tankAngle, TargetAngle):
+    
+    targetAngleGap = (tankAngle - TargetAngle + 360) % 360
+
+    if (targetAngleGap == 0):
+        return "FORWARD"
+    
+    elif (np.sin(targetAngleGap / 180 * np.pi) < 0):
+        return "TURN_LEFT"
+    else:
+        return "TURN_RIGHT"
+    
+    
+    
