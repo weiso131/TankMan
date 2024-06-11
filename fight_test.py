@@ -49,13 +49,12 @@ for i in range(3):
                                     actions[playerID], scoreUp, liveLoss)
             
             
-            if (c.lives[j] != 0):
-                rewards[j] += reward
+            rewards[j] += reward
             done = int(c.lives[j] == 0)
 
             
 
 for i in range(1, 7):
-    print(rewards[i] / 1, end=" ")
+    print(rewards[i] / 3, end=" ")
 pygame.quit()
 

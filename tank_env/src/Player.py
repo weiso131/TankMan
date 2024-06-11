@@ -255,7 +255,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.pre_rect        
 
     def collide_with_bullets(self):
-        self.lives -= 1
+        self.lives -= 0#==================================================================
 
     def get_power(self, power: int):
         self.power += power

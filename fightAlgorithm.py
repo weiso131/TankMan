@@ -18,6 +18,7 @@ def testDataForAgent(dataForAgent):
     if (minEnemyDis <= 300):
         return meetEnemy(Angle, gunAngle, minDisEnemyAngle)
     else:
+        
         return moveToEnemy(Angle, minDisEnemyAngle)
 
 def testQtableData(QtableData):

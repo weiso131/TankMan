@@ -1,9 +1,11 @@
 
-from attack_train_func import *
-"""
-訓練場地必須是沒有任何方塊
-殺紅眼的戰車
-"""
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from usefulFunction import *
+
+
+
 
 def getDataForAgent(data, graph):
 
@@ -42,12 +44,6 @@ def getDataForAgent(data, graph):
 
     return [Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis]
 
-def normalizeData(DataForAgent):
-    targetAngleDiscrete, AngleDiscrete, gunAngleDiscrete, Aim, minDistanceDiscrete = getQTableData(DataForAgent)
-
-    return targetAngleDiscrete / 7, AngleDiscrete / 7, gunAngleDiscrete / 7, Aim / 2, minDistanceDiscrete / 1
-
-
 def getQTableData(DataForAgent):
     Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(DataForAgent)
     enemyAngle = []
@@ -77,58 +73,6 @@ def getQTableData(DataForAgent):
 
     return targetAngleDiscrete, AngleDiscrete, gunAngleDiscrete, Aim, minDistanceDiscrete
 
-
-def rewardFunction(DataForAgent, action : str, score, livesLoss):
-    e1Aim, e2Aim, e3Aim = DataForAgent[5], DataForAgent[6], DataForAgent[7]
-    reward = 0
-
-    # if (e1Aim == -1 or e2Aim == -1 or e3Aim == -1) and action == 'SHOOT':
-    #     return -1
-
-    predict = coach(DataForAgent)
-
-    if (action in predict):
-        return reward + 0.01
-    else:
-        return reward + -0.01
-      
-
-def coach(dataForAgent)->list:
-    #注意角度
-    Angle, gunAngle, e1Angle, e2Angle, e3Angle, e1Aim, e2Aim, e3Aim, e1Dis, e2Dis, e3Dis = tuple(dataForAgent)
-    
-    if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
-        return ["SHOOT"]
-
-    enemyAngle = []
-    if (e1Dis <= 1200):
-        enemyAngle.append((e1Angle, e1Dis))
-    if (e2Dis <= 1200):
-        enemyAngle.append((e2Angle, e2Dis))
-    if (e3Dis <= 1200):
-        enemyAngle.append((e3Angle, e3Dis))
-
-    minDisEnemyAngle, minEnemyDis = GetMinDisEnemy(gunAngle, enemyAngle)
-    if (minEnemyDis <= 300):
-        return meetEnemyForReward(Angle, gunAngle, minDisEnemyAngle)
-    else:
-        return [moveToEnemy(Angle, minDisEnemyAngle)]
-
-def meetEnemyForReward(tankAngle, gunAngle, enemyAngle):
-    targetGunAngleGap = gunAngle - enemyAngle
-    targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
-    if (np.cos(targetGunAngleGap / 180 * np.pi) >= 3 ** 0.5 / 2):
-        if (targetTankAngleGap % 180 == 0 or targetTankAngleGap % 180 == 135):
-            return ["TURN_RIGHT"]
-        elif (targetTankAngleGap % 180 == 45):
-            return ["TURN_LEFT"]
-        else:
-            return ["FORWARD"]
-    
-    elif (np.sin(targetGunAngleGap / 180 * np.pi) < 0):
-        return ["AIM_LEFT"]
-    else:
-        return ["AIM_RIGHT"]
 def GetMinDisEnemy(gunAngle, enemyAngleDis):
     
     enemyAngle = gunAngle
@@ -139,29 +83,19 @@ def GetMinDisEnemy(gunAngle, enemyAngleDis):
             enemyAngle = angle
     return enemyAngle, minEnemyDis
 
-def meetEnemy(tankAngle, gunAngle, enemyAngle):
-    targetGunAngleGap = gunAngle - enemyAngle
-    targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
-    if (np.cos(targetGunAngleGap / 180 * np.pi) >= 3 ** 0.5 / 2):
-        if (targetTankAngleGap % 180 == 0 or targetTankAngleGap % 180 == 135):
-            return "TURN_RIGHT"
-        elif (targetTankAngleGap % 180 == 45):
-            return "TURN_LEFT"
-        else:
-            return "FORWARD"
-    
-    elif (np.sin(targetGunAngleGap / 180 * np.pi) < 0):
-        return "AIM_LEFT"
-    else:
-        return "AIM_RIGHT"
-    
-def moveToEnemy(tankAngle, enemyAngle):
-    
-    targetTankAngleGap = (tankAngle - (int((enemyAngle + 22.5) / 45) % 8) * 45 + 360) % 360
 
-    if (targetTankAngleGap == 0):
-        return "FORWARD"
-    elif (targetTankAngleGap == 180):
-        return "BACKWARD"
-    else:
-        return "TURN_RIGHT"
+def isAimToYou(selfX, selfY, gunAngle, targetX, targetY, teamMateShootDis, lives, cooldown):
+    dis = getDistance(selfX, selfY, targetX, targetY)
+    action = Shoot(selfX, selfY, gunAngle, targetX, targetY, dis)
+    if ((dis > teamMateShootDis and dis < 300) or cooldown != 0):#dis > teamMateShoot代表會射到隊友
+        return -1
+    if (action == "NONE" or lives == 0):
+        return 0
+    return 1
+
+
+
+
+
+
+

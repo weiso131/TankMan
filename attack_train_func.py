@@ -14,52 +14,6 @@ def isAimToYou(selfX, selfY, gunAngle, targetX, targetY, teamMateShootDis, lives
     return 1
 
 
-def rewardFunction(DataForAgent, action : str, score, livesLoss):
-    reward = livesLoss * (-10) + getScoreReward(score)
-
-    Angle, gunAngle, wallUp, wallDown, wallLeft, wallRight,\
-    e1x, e1y, e2x, e2y, e3x, e3y, e1Aim, e2Aim, e3Aim, enemyShow1, enemyShow2, enemyShow3 = tuple(DataForAgent)
-
-    enemyFind = []
-
-    if (enemyShow1 == 1):
-        enemyFind.append({'x' : e1x, 'y' : e1y})
-    if (enemyShow2 == 1):
-        enemyFind.append({'x' : e2x, 'y' : e2y})
-    if (enemyShow3 == 1):
-        enemyFind.append({'x' : e3x, 'y' : e3y})
-
-    if (action == "SHOOT"):
-        if (e1Aim == 1 or e2Aim == 1 or e3Aim == 1):
-            reward += 0.5
-        elif (e1Aim == -1 or e2Aim == -1 or e3Aim == -1):
-            reward -= 2
-
-    elif (len(enemyFind) != 0 and (action == "AIM_RIGHT" or action == "AIM_LEFT")):
-        aimAction = TurnAngleToEnemy_(0, 0, gunAngle * 45, enemyFind)
-        if (aimAction == action):
-            reward += 0.5
-
-    elif (ShootWall(gunAngle * 45, wallLeft, wallRight, wallUp, wallDown) == action):
-        reward += 0.001
-
-    return reward
-
-
-
-
-def getScoreReward(score):
-    reward = 0
-    if (score >= 20):
-        reward += int(score / 20) * 10 #打到人10分
-        score = score % 20
-
-    if (score >= 5):
-        reward += int(score / 5) * 0.01 #打爆牆壁0.02分
-        score = score % 5
-
-    return reward + score * 0.01
-
 
 def Shoot(selfX, selfY, gunAngle, targetX, targetY, dis):
     angleGap = abs(getTargetAngleGap(selfX, selfY, gunAngle, targetX, targetY, dis))
@@ -93,6 +47,10 @@ def shootTeamMate(data, selfX, selfY, gunAngle):
                 teamMateShoot = tmDis  
     return teamMateShoot
 
+def teamMateAngle():
+    """
+    取得八個方向哪些有隊友存在
+    """
 
 
 
@@ -109,34 +67,7 @@ def PosNag(num):
     elif (num < 0):
         return -1
 
-def haveWallFourWay(data, x, y, graph):
-    """
-    這個方向有沒有牆可以打
-    """
-    fourWay = []
-    graphX, graphY = int(x / 25), int(y / 25)
-    for horizon_angle in range(0, 360, 90):
-        wallThisAngle = haveWall(graph, graphX, graphY, horizon_angle)
-        if (wallThisAngle <= 300 and wallThisAngle < shootTeamMate(data, x, y, horizon_angle) ):
-            fourWay.append(1)
-        else:
-            fourWay.append(0)
-    return tuple(fourWay)
 
-def haveWall(graph, graphX, graphY, angle)->float:
-    """
-    return min dis of wall in this gun angle
-    """
-    cos, sin = PosNag(np.cos(angle / 180 * np.pi)), PosNag(np.sin(angle / 180 * np.pi))
-    step = 8
-    if (angle % 90 == 0):
-        step = 12
-    for i in range(step):
-        if (graphY - sin * i < 0 or graphX + cos * i < 0 or graphY - sin * i >= 24 or graphX + cos * i >= 40):
-            break
-        if (int(graph[graphY - sin * i, graphX + cos * i]) > 0):
-            return i * 25
-    return 600
 
 
 def enemyReach(graph, data):
@@ -226,3 +157,32 @@ def turnGunToWall(gunAngle, wallAngle):
         return "AIM_RIGHT"
     else:
         return "AIM_LEFT"
+    
+def haveWallFourWay(data, x, y, graph):
+    """
+    這個方向有沒有牆可以打
+    """
+    fourWay = []
+    graphX, graphY = int(x / 25), int(y / 25)
+    for horizon_angle in range(0, 360, 90):
+        wallThisAngle = haveWall(graph, graphX, graphY, horizon_angle)
+        if (wallThisAngle <= 300 and wallThisAngle < shootTeamMate(data, x, y, horizon_angle) ):
+            fourWay.append(1)
+        else:
+            fourWay.append(0)
+    return tuple(fourWay)
+
+def haveWall(graph, graphX, graphY, angle)->float:
+    """
+    return min dis of wall in this gun angle
+    """
+    cos, sin = PosNag(np.cos(angle / 180 * np.pi)), PosNag(np.sin(angle / 180 * np.pi))
+    step = 8
+    if (angle % 90 == 0):
+        step = 12
+    for i in range(step):
+        if (graphY - sin * i < 0 or graphX + cos * i < 0 or graphY - sin * i >= 24 or graphX + cos * i >= 40):
+            break
+        if (int(graph[graphY - sin * i, graphX + cos * i]) > 0):
+            return i * 25
+    return 600
