@@ -92,41 +92,48 @@ def isAimToYou(selfX, selfY, gunAngle, targetX, targetY, teamMateShootDis, lives
         return 0
     return 1
 
+def rader(x, y, graph:list):
+    raderGraph = graph.copy()
 
+    graphX, graphY = int(x / 25), int(y / 25)
+    xMax, xMin = min(39, graphX + 12), max(-1, graphX - 12)
 
-def seeTarget(x, y, targetX, targetY, graph):
-    enemyWayX, enemyWayY = PosNag(targetX - x), -PosNag(targetY - y)
-    wall_x, wall_y = int(x / 25) + enemyWayX, int(y / 25) + enemyWayY
+    for i in range(graphY, min(23, graphY + 12)):
+        if (raderGraph[i, graphX] == 1): break
+        for j in range(graphX, xMax):
+            if (raderGraph[i, j] == 1): 
+                xMax = j - 1
+                break
+            raderGraph[i, j] = 6
+        for j in range(graphX, xMin, -1):
+            if (raderGraph[i, j] == 1):
+                xMin = j + 1
+                break
+            raderGraph[i, j] = 6
 
-    targetAngle = getTargetAngle(x, y, targetX, targetY, getDistance(x, y, targetX, targetY))
-    if (Shoot(x, y, targetAngle, targetX, targetY, 100) == "SHOOT"):#用有沒有瞄準到判斷
-        return True
-    
+    xMax, xMin = min(39, graphX + 12), max(-1, graphX - 12)
+    for i in range(graphY, max(-1, graphY - 12), -1):
+        if (raderGraph[i, graphX] == 1): break
+        for j in range(graphX, xMax):
+            if (raderGraph[i, j] == 1): 
+                xMax = j - 1
+                break
+            raderGraph[i, j] = 6
+        for j in range(graphX, xMin, -1):
+            if (raderGraph[i, j] == 1):
+                xMin = j + 1
+                break
+            raderGraph[i, j] = 6
 
-    seeEnemy = True
-
-    if (enemyWayX != 0 and enemyWayY != 0):
-        while (wall_x != int(targetX / 25) and wall_x >= 0 and wall_x < 40):
-            while (wall_y != int(targetY / 25) and wall_y >= 0 and wall_y < 24):
-                if (int(graph[wall_y, wall_x]) > 0):
-                    seeEnemy = False
-                    break
-                wall_y += enemyWayY
-            if (not seeEnemy): break
-                
-            wall_x += enemyWayX
-        return seeEnemy
-
-    return False
-
+    return raderGraph
+        
 def seeEnemy(data, graph):
     x, y, _, _ = getTank(data)
-
+    raderGraph = rader(x, y, graph)
     for enemy in data["competitor_info"]:
         enemyAngle = (enemy['angle'] + 540) % 360
         enemyX, enemyY = enemy['x'] + 12.5 - 5 * int(enemyAngle % 90 != 0), enemy['y'] + 12.5 - 5 * int(enemyAngle % 90 != 0)
-        enemyDis = getDistance(x, y, enemyX, enemyY)
-        if (seeTarget(x, y, enemyX, enemyY, graph) and enemyDis <= 300):
+        if (raderGraph[int(enemyY / 25), int(enemyX / 25)]):
             return True
 
     return False

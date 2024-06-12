@@ -24,14 +24,13 @@ class MLPlay:
         
         self.time = 0
         self.avoidDirect = 0
-        self.fightAgent = Q_learning((8, 8, 8, 2, 2, 2), ['AIM_RIGHT', 'AIM_LEFT', 'SHOOT', 'FORWARD', 'BACKWARD', 'TURN_RIGHT', 'TURN_LEFT', 'NONE'])
-        self.fightAgent.load(os.path.dirname(os.path.abspath(__file__)) + "/weiso/asset/tank3.pickle")
+        self.fightAgent = Q_learning((8, 8, 8, 2, 2, 2), ['AIM_RIGHT', 'AIM_LEFT', 'SHOOT', 'FORWARD', 'BACKWARD', 'TURN_RIGHT', 'TURN_LEFT'])
+        self.fightAgent.load(os.path.dirname(os.path.abspath(__file__)) + "/weiso/asset/UNDERTAKER.pickle")
 
         self.leftCheckPoint = [(425, 50), (50, 50), (425, 225), (50, 225), (425, 525), (50, 525)]
         self.rightCheckPoint = [(575, 50), (925, 50), (575, 225), (925, 225), (575, 525), (925, 525)]
 
-        self.allCheckPoint = [(425, 50), (50, 50), (425, 225), (50, 225), (425, 525), (50, 525),\
-                              (575, 50), (925, 50), (575, 225), (925, 225), (575, 525), (925, 525)]
+        self.middleCheckPoint = []
 
         
         self.bullet_history = {'1P_bullet' : (-1, -1, -1, -1, -1),
@@ -61,7 +60,7 @@ class MLPlay:
             self.avoidDirect = abs(self.avoidDirect - 1)
         wallAngle = 0
         if (int(scene_info['id'][0]) < 4):
-            wallAngle = 180 #只打隔絕的牆
+            wallAngle = 180 #只打隔絕一切的城牆
 
         shootWall = getShootWallAgree(x, y, wallAngle, scene_info, graph)
 
@@ -80,7 +79,7 @@ class MLPlay:
 
         #判斷是否進入戰鬥模式
         elif (seeEnemy(scene_info, graph) and scene_info["oil"] > 50 and scene_info["power"] != 0):
-            
+            print(scene_info["id"], "戰鬥模式啟動")
             state = getQTableData(getDataForAgent(scene_info, graph, self.avoidDirect))
             
             action = self.fightAgent.step(state)
