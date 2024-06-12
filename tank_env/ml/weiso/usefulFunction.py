@@ -1,5 +1,4 @@
 import numpy as np
-import random 
 def getDistance(x1, y1, x2, y2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
@@ -56,6 +55,10 @@ def shootTeamMate(data, selfX, selfY, gunAngle):
                 teamMateShoot = tmDis  
     return teamMateShoot
 def Shoot(selfX, selfY, gunAngle, targetX, targetY, dis):
+    """
+    確認是否瞄準到目標
+    """
+
     angleGap = abs(getTargetAngleGap(selfX, selfY, gunAngle, targetX, targetY, dis))
     angleTan = np.tan(angleGap / 180 * np.pi)
 
@@ -74,6 +77,10 @@ def getTargetAngle(selfX, selfY, targetX, targetY, dis):
     return targetAngle
 
 def getTank(data):
+    """
+    把奇怪的座標系統變正常
+    """
+
     Angle = (data['angle'] + 540) % 360
     return data['x'] + 12.5 - 5 * int(Angle % 90 != 0), data['y'] + 12.5 - 5 * int(Angle % 90 != 0), Angle, (data['gun_angle'] + 540) % 360
 
