@@ -1,4 +1,5 @@
 import numpy as np
+import random
 def getDistance(x1, y1, x2, y2) -> float:
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
@@ -138,23 +139,22 @@ def findMinResouce(data, name):
     """
     name : oil_stations_info, bullet_stations_info
     """
-    x = data["x"]
-    y = data["y"]
+    x, y, _, _ = getTank(data)
 
     min_oil_x = 1e4
     min_oil_y = 1e4
     oil_station = []
 
+    atRight = x > 500
+
     for oil in data[name]:
         if (oil['power'] != 0):
             oil_station.append(oil)
 
-    if (len(oil_station) == 0):
-
-        return "NONE"
-
     for o in oil_station:
         oil_x, oil_y = o['x'], o['y']
+        if ((atRight and oil_x <= 500) or (not atRight and oil_x > 500)):
+            continue
         if (getDistance(x, y, oil_x, oil_y) < getDistance(x, y, min_oil_x, min_oil_y)):
             min_oil_x = oil_x
             min_oil_y = oil_y
@@ -194,9 +194,26 @@ def getMinDisCP(x, y, checkPointList, graph):
             model = avalible
     return minX, minY, model
 
+def getTargetCP(x, y, targetX, targetY, checkPointList, graph):
+    """
+    go target with check point
+    """
+    minDis = 1e9
+    minX, minY = 0, 0
+    model = 1 #決定先走x方向還是y方向
+    for cpX, cpY in checkPointList:
+        dis = getDistance(x, y, cpX, cpY) + getDistance(targetX, targetY, cpX, cpY)
+        selfAvalible = canGoTarget(x, y, cpX, cpY, graph)
+        targetAvalible = canGoTarget(targetX, targetY, cpX, cpY, graph)
+        if (dis < minDis and selfAvalible != 0 and targetAvalible != 0):
+            minDis = dis
+            minX, minY = cpX, cpY
+            model = selfAvalible
+    return minX, minY, model
 
 
-def goTarget(x, y, targetX, targetY, angle, model):
+
+def goTargetDirect(x, y, targetX, targetY, angle, model):
     """
     warning: x, y should be + 12.5 + 5 * int(angle % 90 != 0)
 
@@ -217,7 +234,7 @@ def goTarget(x, y, targetX, targetY, angle, model):
 
 def xFirstWalk(xDis, yDis, xAngle, yAngle, angle):
     if (xDis == 0 and yDis == 0):
-        return "a"
+        return random.choice(["FORWARD", "BACKWARD", "TURN_RIGHT", "TURN_LEFT"])
     elif (xAngle != angle and xDis != 0):
         return turnToAngle(angle, xAngle)
     elif(xDis == 0 and yAngle != angle):
@@ -226,7 +243,7 @@ def xFirstWalk(xDis, yDis, xAngle, yAngle, angle):
         return "FORWARD"
 def yFirstWalk(xDis, yDis, xAngle, yAngle, angle):
     if (xDis == 0 and yDis == 0):
-        return "a"
+        return random.choice(["FORWARD", "BACKWARD", "TURN_RIGHT", "TURN_LEFT"])
     elif (yAngle != angle and yDis != 0):
         return turnToAngle(angle, yAngle)
     elif(yDis == 0 and xAngle != angle):
@@ -246,3 +263,12 @@ def turnToAngle(tankAngle, TargetAngle):
         return "TURN_LEFT"
     else:
         return "TURN_RIGHT"
+    
+
+def goTarget(x, y, targetX, targetY, angle, graph, nowCheckPoint):
+    model = canGoTarget(x, y, targetX, targetY, graph)
+    if (model != 0):
+        return goTargetDirect(x, y, targetX, targetY, angle, model)
+    else:
+        cpX, cpY, model = getTargetCP(x, y, targetX, targetY, nowCheckPoint, graph)
+        return goTargetDirect(x, y, cpX, cpY, angle, model)

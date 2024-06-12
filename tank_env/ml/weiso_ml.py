@@ -30,64 +30,72 @@ class MLPlay:
         self.leftCheckPoint = [(425, 50), (50, 50), (425, 225), (50, 225), (425, 525), (50, 525)]
         self.rightCheckPoint = [(575, 50), (925, 50), (575, 225), (925, 225), (575, 525), (925, 525)]
 
-        self.middleCheckPoint = []
+        self.allCheckPoint = [(425, 50), (50, 50), (425, 225), (50, 225), (425, 525), (50, 525),\
+                              (575, 50), (925, 50), (575, 225), (925, 225), (575, 525), (925, 525)]
+
+        self.haveBreakWall = False
 
 
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
 
         x, y, angle, gunAngle = getTank(scene_info)
         graph = getMapGraph(scene_info)
-
         front = 575
         nowCheckPoint = self.rightCheckPoint
-        if (int(scene_info['id'][0]) > 3):
+        if (x < 500):
             nowCheckPoint = self.leftCheckPoint
             front = 425
-        print(scene_info['id'], end=" ")
-        model = canGoTarget(x, y, front, 225, graph)
-        if (model != 0):
-            return [goTarget(x, y, front, 225, angle, model)]
-
-
-
-
-
-        return ["NONE"]
-
-
-
-        #判斷是否進入戰鬥模式
-        if (seeEnemy(scene_info, graph) and scene_info["oil"] > 50 and scene_info["power"] > 0):
+        if ((int(scene_info['id'][0]) > 3 and x >= 500) or (int(scene_info['id'][0]) <= 3 and x < 500)):
+            print(scene_info['id'], "breakWall")
+            self.haveBreakWall = True
             
-            print(scene_info['id'], "參上")
-
-            if ((self.avoidDirect == 0 and graphThisAngle(x, y, angle, graph) <= 1) or\
-                (self.avoidDirect == 1 and graphThisAngle(x, y, (angle + 180) % 360, graph) <= 1)):
-                self.avoidDirect = abs(self.avoidDirect - 1)
-            state = getQTableData(getDataForAgent(scene_info, graph, self.avoidDirect))
-            
-            action = self.fightAgent.step(state)
-
-            
-
-            return [action]
-
-        #判斷是否打牆
+        if ((self.avoidDirect == 0 and graphThisAngle(x, y, angle, graph) <= 1) or (self.avoidDirect == 1 and graphThisAngle(x, y, (angle + 180) % 360, graph) <= 1)):
+            self.avoidDirect = abs(self.avoidDirect - 1)
         wallAngle = 0
         if (int(scene_info['id'][0]) < 4):
             wallAngle = 180 #只打隔絕的牆
 
         shootWall = getShootWallAgree(x, y, wallAngle, scene_info, graph)
 
-        if (shootWall and abs(x - 500) < 100 and scene_info['power'] > 0 and scene_info['oil'] > 50):
-            return [turnGunToWall(gunAngle, wallAngle)]
-       
+        action = "MEOW"
+        
+        
+        if (scene_info['oil'] < 50):
+            oil_x, oil_y = findMinResouce(scene_info, "oil_stations_info")
+            action = goTarget(x, y, oil_x, oil_y, angle, graph, nowCheckPoint)
+        
+        elif (scene_info['power'] == 0):
+            bullet_x, bullet_y = findMinResouce(scene_info, "bullet_stations_info")
+            action = goTarget(x, y, bullet_x, bullet_y, angle, graph, nowCheckPoint)
 
+        #判斷是否進入戰鬥模式
+        elif (seeEnemy(scene_info, graph) and scene_info["oil"] > 50 and scene_info["power"] != 0):
+            
+            state = getQTableData(getDataForAgent(scene_info, graph, self.avoidDirect))
+            
+            action = self.fightAgent.step(state)
 
-        if (graphThisAngle(x, y, angle, graph) > 1):
-             return ["FORWARD"]
-        else:
-             return ["TURN_RIGHT"]
+        elif (shootWall and abs(x - 500) < 100 and scene_info['power'] > 0 and scene_info['oil'] > 50):
+            action = turnGunToWall(gunAngle, wallAngle)
+               
+        #還沒攻進對面陣地的時候，衝到前線炸牆壁
+        elif (abs(x - 500) > 100 and not self.haveBreakWall):
+            action = goTarget(x, y, front, y, angle, graph, nowCheckPoint)
+
+        elif (abs(x - 500) <= 100 and not self.haveBreakWall):
+            if (angle % 180 != 90):
+                action = "TURN_RIGHT"
+            elif(self.avoidDirect == 0):
+                action = "FORWARD"
+            else:
+                action = "BACKWARD"
+        if (action == "NONE"):
+            print(scene_info['id'], "NONE")
+        if (action == "MEOW"):
+            print(scene_info['id'], "MEOW", abs(x - 500), self.haveBreakWall)
+        #攻進對面陣地的時候，追著人打(待實現)
+        return [action]
+            
         
         
         
