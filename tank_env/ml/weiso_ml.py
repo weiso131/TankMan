@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from weiso.Q_learing import Q_learning
 from weiso.fight_func import getDataForAgent, getQTableData, seeEnemy
 from weiso.usefulFunction import *
-from weiso.wall_break import  turnGunToWall, haveWall
+from weiso.wall_break import  turnGunToWall, getShootWallAgree
 
 
 
@@ -55,10 +55,10 @@ class MLPlay:
 
         #判斷是否打牆
         wallAngle = 0
-        if (x >= 500):
+        if (int(scene_info['id'][0]) < 4):
             wallAngle = 180 #只打隔絕的牆
 
-        shootWall = haveWall(graph, int(x / 25), int(y / 25), wallAngle) <= 300
+        shootWall = getShootWallAgree(x, y, wallAngle, scene_info, graph)
 
         if (shootWall and abs(x - 500) < 100 and scene_info['power'] > 0 and scene_info['oil'] > 50):
             return [turnGunToWall(gunAngle, wallAngle)]
