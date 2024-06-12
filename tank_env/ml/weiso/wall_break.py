@@ -37,6 +37,6 @@ def haveWall(graph, graphX, graphY, angle)->float:
     for i in range(step):
         if (graphY - sin * i < 0 or graphX + cos * i < 0 or graphY - sin * i >= 24 or graphX + cos * i >= 40):
             break
-        if (int(graph[graphY - sin * i, graphX + cos * i]) > 0):
+        if (int(graph[graphY - sin * i, graphX + cos * i]) == 1):
             return i * 25
     return 600

@@ -11,7 +11,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from weiso.Q_learing import Q_learning
-from weiso.fight_func import getDataForAgent, getQTableData, seeEnemy
+from weiso.fight_func import getDataForAgent, getQTableData, seeEnemy, getBullet, avoidBullet
 from weiso.usefulFunction import *
 from weiso.wall_break import  turnGunToWall, getShootWallAgree
 
@@ -33,21 +33,29 @@ class MLPlay:
         self.allCheckPoint = [(425, 50), (50, 50), (425, 225), (50, 225), (425, 525), (50, 525),\
                               (575, 50), (925, 50), (575, 225), (925, 225), (575, 525), (925, 525)]
 
-        self.haveBreakWall = False
-
+        
+        self.bullet_history = {'1P_bullet' : (-1, -1, -1, -1, -1),
+                            '2P_bullet' : (-1, -1, -1, -1, -1),
+                            '3P_bullet' : (-1, -1, -1, -1, -1),
+                            '4P_bullet' : (-1, -1, -1, -1, -1),
+                            '5P_bullet' : (-1, -1, -1, -1, -1),
+                            '6P_bullet' : (-1, -1, -1, -1, -1),}#startx, y, endx, y, rot
 
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
-
+        haveBreakWall = False
         x, y, angle, gunAngle = getTank(scene_info)
         graph = getMapGraph(scene_info)
         front = 575
         nowCheckPoint = self.rightCheckPoint
+        self.bullet_history, graph = getBullet(scene_info, self.bullet_history, graph)
+
+        
+
         if (x < 500):
             nowCheckPoint = self.leftCheckPoint
             front = 425
         if ((int(scene_info['id'][0]) > 3 and x >= 500) or (int(scene_info['id'][0]) <= 3 and x < 500)):
-            print(scene_info['id'], "breakWall")
-            self.haveBreakWall = True
+            haveBreakWall = True
             
         if ((self.avoidDirect == 0 and graphThisAngle(x, y, angle, graph) <= 1) or (self.avoidDirect == 1 and graphThisAngle(x, y, (angle + 180) % 360, graph) <= 1)):
             self.avoidDirect = abs(self.avoidDirect - 1)
@@ -59,8 +67,10 @@ class MLPlay:
 
         action = "MEOW"
         
-        
-        if (scene_info['oil'] < 50):
+        if (graph[int(y / 25), int(x / 25)] < 0):#被子彈彈道瞄準到
+            action = avoidBullet(graph[int(y / 25), int(x / 25)], angle, self.bullet_history, self.avoidDirect)
+
+        elif (scene_info['oil'] < 50):
             oil_x, oil_y = findMinResouce(scene_info, "oil_stations_info")
             action = goTarget(x, y, oil_x, oil_y, angle, graph, nowCheckPoint)
         
@@ -79,10 +89,10 @@ class MLPlay:
             action = turnGunToWall(gunAngle, wallAngle)
                
         #還沒攻進對面陣地的時候，衝到前線炸牆壁
-        elif (abs(x - 500) > 100 and not self.haveBreakWall):
+        elif (abs(x - 500) > 100 and not haveBreakWall):
             action = goTarget(x, y, front, y, angle, graph, nowCheckPoint)
 
-        elif (abs(x - 500) <= 100 and not self.haveBreakWall):
+        elif (abs(x - 500) <= 100 and not haveBreakWall):
             if (angle % 180 != 90):
                 action = "TURN_RIGHT"
             elif(self.avoidDirect == 0):
@@ -92,21 +102,21 @@ class MLPlay:
         if (action == "NONE"):
             print(scene_info['id'], "NONE")
         if (action == "MEOW"):
-            print(scene_info['id'], "MEOW", abs(x - 500), self.haveBreakWall)
+            print(scene_info['id'], "MEOW", abs(x - 500), haveBreakWall)
+        
         #攻進對面陣地的時候，追著人打(待實現)
+
+        
         return [action]
             
-        
-        
-        
-        
-
     def reset(self):
         """
         Reset the status
         """
         print(f"reset Game {self.side}")
+    
 
+        #print(self.bullet_info)
 
 
 

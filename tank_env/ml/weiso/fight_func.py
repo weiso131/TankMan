@@ -130,3 +130,76 @@ def seeEnemy(data, graph):
             return True
 
     return False
+
+def getBullet(data : dict, bullet_history : dict, graph : np.ndarray):
+    bullet_info = data["bullets_info"]
+
+    existBullet = []
+
+    for b in bullet_info:
+        id = b["id"]
+        startX, startY = b['x'], b['y']
+        existBullet.append(id)
+        if (bullet_history[id][0] == -1):
+            
+            angle = (b['rot'] + 540 ) %  360
+            cos, sin = PosNag(np.cos(angle / 180 * np.pi)), PosNag(np.sin(angle / 180 * np.pi))
+
+            if (angle % 90 == 0):
+                endX, endY = startX + 330 * cos, startY - 330 * sin
+            else:
+                endX, endY = startX + 231 * cos, startY - 231 * sin
+            bullet_history[id] = (startX, startY, max(0, min(endX, 999)), max(0, min(endY, 599)), angle)
+        
+        _, _, endX, endY, _ = bullet_history[id]
+
+        graph = drawBullet(startX, startY, endX, endY, graph, int(id[0]))
+    
+    #刪除過期的子彈資料
+    for i in range(1, 7):
+        key = str(i) + 'P_bullet'
+        if (not (key in existBullet)):
+            bullet_history[key] = (-1, -1, -1, -1, -1)
+
+    return bullet_history, graph
+
+def drawBullet(startX, startY, endX, endY, graph, id : int):
+    wayX, wayY = PosNag(endX - startX), -PosNag(endY - startY)
+
+    graphStartX, graphStartY = int(startX / 25), int(startY / 25)
+    graphEndX, graphEndY = int(endX / 25), int(endY / 25)
+
+    step = 0
+    while ((graphStartX + step * wayX != graphEndX + wayX or \
+            graphStartX == graphEndX) and \
+           (graphStartY + step * wayY != graphEndY + wayY or
+            graphStartY == graphEndY)):
+        x = graphStartX + step * wayX
+        y = graphStartY + step * wayY
+        if (graph[y, x] == 1):
+            break
+        graph[y, x] = -id
+
+        step += 1
+    return graph
+
+def avoidBullet(value, angle, bullet_history, avoidDirect):
+    """
+    value是代表這個子彈路徑所顯示的值(-id)
+    """
+
+
+    bullet_angle = bullet_history[str(-int(value)) + "P_bullet"][4]
+
+    angleGap = (angle - bullet_angle + 360) % 360
+
+    if (angleGap % 180 == 90):
+        if (avoidDirect == 0):
+            return "FORWARD"
+        else:
+            return "BACKWARD"
+    elif (angleGap % 180 == 135):
+        return "TURN_RIGHT"
+    else:
+        return "TURN_LEFT"
+
