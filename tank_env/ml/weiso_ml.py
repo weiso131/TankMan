@@ -27,16 +27,34 @@ class MLPlay:
         self.fightAgent = Q_learning((8, 8, 8, 2, 2, 2), ['AIM_RIGHT', 'AIM_LEFT', 'SHOOT', 'FORWARD', 'BACKWARD', 'TURN_RIGHT', 'TURN_LEFT', 'NONE'])
         self.fightAgent.load(os.path.dirname(os.path.abspath(__file__)) + "/weiso/asset/tank3.pickle")
 
-        self.leftCheckPoint = []
-        self.rightCheckPoint = []
+        self.leftCheckPoint = [(425, 50), (50, 50), (425, 225), (50, 225), (425, 525), (50, 525)]
+        self.rightCheckPoint = [(575, 50), (925, 50), (575, 225), (925, 225), (575, 525), (925, 525)]
+
         self.middleCheckPoint = []
 
 
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
 
         x, y, angle, gunAngle = getTank(scene_info)
-
         graph = getMapGraph(scene_info)
+
+        front = 575
+        nowCheckPoint = self.rightCheckPoint
+        if (int(scene_info['id'][0]) > 3):
+            nowCheckPoint = self.leftCheckPoint
+            front = 425
+        print(scene_info['id'], end=" ")
+        model = canGoTarget(x, y, front, 225, graph)
+        if (model != 0):
+            return [goTarget(x, y, front, 225, angle, model)]
+
+
+
+
+
+        return ["NONE"]
+
+
 
         #判斷是否進入戰鬥模式
         if (seeEnemy(scene_info, graph) and scene_info["oil"] > 50 and scene_info["power"] > 0):
@@ -50,6 +68,7 @@ class MLPlay:
             
             action = self.fightAgent.step(state)
 
+            
 
             return [action]
 

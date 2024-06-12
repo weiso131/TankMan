@@ -1,5 +1,5 @@
 import numpy as np
-def getDistance(x1, y1, x2, y2):
+def getDistance(x1, y1, x2, y2) -> float:
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 def getCross(x1, y1, x2, y2):
@@ -132,45 +132,7 @@ def graphThisAngle(x, y, angle, graph):
     return step
 
 
-def canGoTarget(x, y, targetX, targetY, graph, angle):
-    """
-    warning: x, y should be + 12.5 + 5 * int(angle % 90 != 0)
-    """
-    graphX, graphY = int(x / 25), int(y / 25)
-    graphTargetX, graphTargetY = int(targetX / 25), int(targetY / 25)
-
-    xAngle = np.arccos(PosNag(graphTargetX - graphX)) * 180 / np.pi
-    yAngle = np.arcsin(-PosNag(graphTargetY - graphY)) * 180 / np.pi
-
-    
-
-    xDis = abs(graphTargetX - graphX)
-    yDis = abs(graphTargetY - graphY)
-    
-    if (graphThisAngle(graphX, graphY, xAngle, graph) < xDis and \
-        graphThisAngle(graphX, graphY, yAngle, graph) < yDis):
-        if (xDis == 0):
-            return turnToAngle(angle, yAngle)
-        else:
-            return turnToAngle(angle, xAngle)
-    else:
-        return "MEOW"
-    
-
-def turnToAngle(tankAngle, TargetAngle):
-    
-    targetAngleGap = (tankAngle - TargetAngle + 360) % 360
-
-    if (targetAngleGap == 0):
-        return "FORWARD"
-    
-    elif (np.sin(targetAngleGap / 180 * np.pi) < 0):
-        return "TURN_LEFT"
-    else:
-        return "TURN_RIGHT"
-    
-
-
+#下面應該都是路徑規劃相關?
 
 def findMinResouce(data, name):
     """
@@ -199,4 +161,88 @@ def findMinResouce(data, name):
 
     return min_oil_x, min_oil_y
 
+def canGoTarget(x, y, targetX, targetY, graph):
+    graphX, graphY = int(x / 25), int(y / 25)
+    graphTargetX, graphTargetY = int(targetX / 25), int(targetY / 25)
+
+    xAngle = np.arccos(PosNag(graphTargetX - graphX)) * 180 / np.pi
+    yAngle = np.arcsin(-PosNag(graphTargetY - graphY)) * 180 / np.pi
+
+    xDis = abs(graphTargetX - graphX)
+    yDis = abs(graphTargetY - graphY)
+
+    #先走x再走y
+    if (graphThisAngle(x, y, xAngle, graph) > xDis and graphThisAngle(targetX, y, yAngle, graph) > yDis):
+        return 1
+    #先走y再走x
+    elif (graphThisAngle(x, y, yAngle, graph) > yDis and graphThisAngle(x, targetY, xAngle, graph) > xDis):
+        return 2
+    else:
+        return 0
+
+
+def getMinDisCP(x, y, checkPointList, graph):
+    minDis = 1e9
+    minX, minY = 0, 0
+    model = 1 #決定先走x方向還是y方向
+    for cpX, cpY in checkPointList:
+        dis = getDistance(x, y, cpX, cpY)
+        avalible = canGoTarget(x, y, cpX, cpY, graph)
+        if (dis < minDis and avalible != 0):
+            minDis = dis
+            minX, minY = cpX, cpY
+            model = avalible
+    return minX, minY, model
+
+
+
+def goTarget(x, y, targetX, targetY, angle, model):
+    """
+    warning: x, y should be + 12.5 + 5 * int(angle % 90 != 0)
+
+    這必須建立於目標毫無阻礙時
+    """
+    graphX, graphY = int(x / 25), int(y / 25)
+    graphTargetX, graphTargetY = int(targetX / 25), int(targetY / 25)
+
+    xAngle = np.arccos(PosNag(graphTargetX - graphX)) * 180 / np.pi
+    yAngle = np.arcsin(-PosNag(graphTargetY - graphY)) * 180 / np.pi
+    xDis = abs(graphTargetX - graphX)
+    yDis = abs(graphTargetY - graphY)
+
+    if (model == 1): 
+        return xFirstWalk(xDis, yDis, xAngle, yAngle, angle)
+    else:
+        return yFirstWalk(xDis, yDis, xAngle, yAngle, angle)
+
+def xFirstWalk(xDis, yDis, xAngle, yAngle, angle):
+    if (xDis == 0 and yDis == 0):
+        return "a"
+    elif (xAngle != angle and xDis != 0):
+        return turnToAngle(angle, xAngle)
+    elif(xDis == 0 and yAngle != angle):
+        return turnToAngle(angle, yAngle)
+    else:
+        return "FORWARD"
+def yFirstWalk(xDis, yDis, xAngle, yAngle, angle):
+    if (xDis == 0 and yDis == 0):
+        return "a"
+    elif (yAngle != angle and yDis != 0):
+        return turnToAngle(angle, yAngle)
+    elif(yDis == 0 and xAngle != angle):
+        return turnToAngle(angle, xAngle)
+    else:
+        return "FORWARD"
+def turnToAngle(tankAngle, TargetAngle):
+    """
+    tankAngle != TargetAngle
+    """
+    targetAngleGap = (tankAngle - TargetAngle + 360) % 360
+
+    if (targetAngleGap == 0):
+        return "FORWARD"
     
+    elif (np.sin(targetAngleGap / 180 * np.pi) < 0):
+        return "TURN_LEFT"
+    else:
+        return "TURN_RIGHT"
