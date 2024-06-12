@@ -11,21 +11,15 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from weiso.Q_learing import Q_learning
-from weiso.fight_func import getDataForAgent, getQTableData
+from weiso.fight_func import getDataForAgent, getQTableData, seeEnemy
 from weiso.usefulFunction import *
-from weiso.wall_break import  ShootWall, haveWallFourWay
+from weiso.wall_break import  turnGunToWall, haveWall
 
 
 
 
 class MLPlay:
     def __init__(self, ai_name, *args, **kwargs):
-        """
-        Constructor
-
-        @param side A string "1P" or "2P" indicates that the `MLPlay` is used by
-               which side.
-        """
         self.side = ai_name
         
         self.time = 0
@@ -33,32 +27,51 @@ class MLPlay:
         self.fightAgent = Q_learning((8, 8, 8, 2, 2, 2), ['AIM_RIGHT', 'AIM_LEFT', 'SHOOT', 'FORWARD', 'BACKWARD', 'TURN_RIGHT', 'TURN_LEFT', 'NONE'])
         self.fightAgent.load(os.path.dirname(os.path.abspath(__file__)) + "/weiso/asset/tank3.pickle")
 
+        self.leftCheckPoint = []
+        self.rightCheckPoint = []
+        self.middleCheckPoint = []
+
 
     def update(self, scene_info: dict, keyboard=[], *args, **kwargs):
 
         x, y, angle, gunAngle = getTank(scene_info)
 
         graph = getMapGraph(scene_info)
-        
-        
-        if ((self.avoidDirect == 0 and graphThisAngle(x, y, angle, graph) <= 1) or\
+
+        #判斷是否進入戰鬥模式
+        if (seeEnemy(scene_info, graph) and scene_info["oil"] > 50 and scene_info["power"] > 0):
+            
+            print(scene_info['id'], "參上")
+
+            if ((self.avoidDirect == 0 and graphThisAngle(x, y, angle, graph) <= 1) or\
                 (self.avoidDirect == 1 and graphThisAngle(x, y, (angle + 180) % 360, graph) <= 1)):
                 self.avoidDirect = abs(self.avoidDirect - 1)
-        state = getQTableData(getDataForAgent(scene_info, graph, self.avoidDirect))
-        # wallRight, wallUp, wallLeft, wallDown = haveWallFourWay(scene_info, x, y, graph)
-
-        # action = ShootWall(gunAngle, wallLeft, wallRight, wallUp, wallDown)
-
-        # if (action == "MEOW"):
-
-        action = self.fightAgent.step(state)
-
-        forwardDis = graphThisAngle(x, y, angle, graph)
+            state = getQTableData(getDataForAgent(scene_info, graph, self.avoidDirect))
+            
+            action = self.fightAgent.step(state)
 
 
-             
+            return [action]
 
-        return [goToTarget(x, y, 600, 300, graph, angle)]
+        #判斷是否打牆
+        wallAngle = 0
+        if (x >= 500):
+            wallAngle = 180 #只打隔絕的牆
+
+        shootWall = haveWall(graph, int(x / 25), int(y / 25), wallAngle) <= 300
+
+        if (shootWall and abs(x - 500) < 100 and scene_info['power'] > 0 and scene_info['oil'] > 50):
+            return [turnGunToWall(gunAngle, wallAngle)]
+       
+
+
+        if (graphThisAngle(x, y, angle, graph) > 1):
+             return ["FORWARD"]
+        else:
+             return ["TURN_RIGHT"]
+        
+        
+        
         
 
     def reset(self):

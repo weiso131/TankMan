@@ -125,7 +125,7 @@ def graphThisAngle(x, y, angle, graph):
     return step
 
 
-def goToTarget(x, y, targetX, targetY, graph, angle):
+def canGoTarget(x, y, targetX, targetY, graph, angle):
     """
     warning: x, y should be + 12.5 + 5 * int(angle % 90 != 0)
     """
@@ -139,16 +139,16 @@ def goToTarget(x, y, targetX, targetY, graph, angle):
 
     xDis = abs(graphTargetX - graphX)
     yDis = abs(graphTargetY - graphY)
-    if (xDis <= graphThisAngle(x, y, xAngle, graph) - 1 and xDis != 0):
-        print(x, y)
-        return turnToAngle(angle, xAngle)
-    elif (yDis <= graphThisAngle(x, y, yAngle, graph) - 1 and yDis != 0):
-        print(x, y)
-        return turnToAngle(angle, yAngle)
-    elif (xDis == 0 and yDis == 0):
-        return "SHOOT"
+    
+    if (graphThisAngle(graphX, graphY, xAngle, graph) < xDis and \
+        graphThisAngle(graphX, graphY, yAngle, graph) < yDis):
+        if (xDis == 0):
+            return turnToAngle(angle, yAngle)
+        else:
+            return turnToAngle(angle, xAngle)
     else:
-        return "NONE"
+        return "MEOW"
+    
 
 def turnToAngle(tankAngle, TargetAngle):
     
@@ -162,5 +162,34 @@ def turnToAngle(tankAngle, TargetAngle):
     else:
         return "TURN_RIGHT"
     
-    
+
+
+
+def findMinResouce(data, name):
+    """
+    name : oil_stations_info, bullet_stations_info
+    """
+    x = data["x"]
+    y = data["y"]
+
+    min_oil_x = 1e4
+    min_oil_y = 1e4
+    oil_station = []
+
+    for oil in data[name]:
+        if (oil['power'] != 0):
+            oil_station.append(oil)
+
+    if (len(oil_station) == 0):
+
+        return "NONE"
+
+    for o in oil_station:
+        oil_x, oil_y = o['x'], o['y']
+        if (getDistance(x, y, oil_x, oil_y) < getDistance(x, y, min_oil_x, min_oil_y)):
+            min_oil_x = oil_x
+            min_oil_y = oil_y
+
+    return min_oil_x, min_oil_y
+
     

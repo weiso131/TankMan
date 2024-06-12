@@ -153,7 +153,7 @@ class Player(pygame.sprite.Sprite):
             # Movement
             if not move_flag:
                 if TURN_LEFT_CMD == command and not self.is_turn_left and TURN_RIGHT_CMD != command:
-                    self.oil -= 0.0#======================================================================
+                    self.oil -= 0.1#======================================================================
                     self.turn_left()
                     self.is_turn_left = True
                     self.is_forward = False
@@ -161,7 +161,7 @@ class Player(pygame.sprite.Sprite):
                     self.is_turn_right = False
                     self.action_history.append(TURN_LEFT_CMD)
                 elif TURN_RIGHT_CMD == command and not self.is_turn_right and TURN_LEFT_CMD != command:
-                    self.oil -= 0.0#======================================================================
+                    self.oil -= 0.1#======================================================================
                     self.turn_right()
                     self.is_turn_right = True
                     self.is_forward = False
@@ -169,7 +169,7 @@ class Player(pygame.sprite.Sprite):
                     self.is_turn_left = False
                     self.action_history.append(TURN_RIGHT_CMD)
                 elif FORWARD_CMD == command and BACKWARD_CMD != command:
-                    self.oil -= 0.0#======================================================================
+                    self.oil -= 0.1#======================================================================
                     self.forward()
                     self.is_forward = True
                     self.is_backward = False
@@ -177,7 +177,7 @@ class Player(pygame.sprite.Sprite):
                     self.is_turn_left = False
                     self.action_history.append(FORWARD_CMD)
                 elif BACKWARD_CMD == command and FORWARD_CMD != command:
-                    self.oil -= 0.0#======================================================================
+                    self.oil -= 0.1#======================================================================
                     self.backward()
                     self.is_backward = True
                     self.is_forward = False
@@ -192,7 +192,7 @@ class Player(pygame.sprite.Sprite):
     def shoot(self):
         if self.last_shoot_frame == 0 or self.used_frame - self.last_shoot_frame > SHOOT_COOLDOWN:
             self.last_shoot_frame = self.used_frame
-            self.power -= 0#===========================================================================
+            self.power -= 1#===========================================================================
             self.is_shoot = True
 
     def forward(self):
@@ -255,7 +255,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.pre_rect        
 
     def collide_with_bullets(self):
-        self.lives -= 0#==================================================================
+        self.lives -= 1#==================================================================
 
     def get_power(self, power: int):
         self.power += power

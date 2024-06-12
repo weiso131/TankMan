@@ -27,11 +27,12 @@ def getDataForAgent(data, graph, avoidDirect):
 
 
     cooldown = data['cooldown']
+    power = data['power']
       
 
-    e1Aim, e2Aim, e3Aim = isAimToYou(x, y, gunAngle, e1x, e1y, hitTmDis, enemy_info[0]['lives'], cooldown), \
-                            isAimToYou(x, y, gunAngle, e2x, e2y, hitTmDis, enemy_info[1]['lives'], cooldown),\
-                            isAimToYou(x, y, gunAngle, e3x, e3y, hitTmDis, enemy_info[2]['lives'], cooldown) 
+    e1Aim, e2Aim, e3Aim = isAimToYou(x, y, gunAngle, e1x, e1y, hitTmDis, enemy_info[0]['lives'], cooldown) * int(power != 0), \
+                            isAimToYou(x, y, gunAngle, e2x, e2y, hitTmDis, enemy_info[1]['lives'], cooldown) * int(power != 0),\
+                            isAimToYou(x, y, gunAngle, e3x, e3y, hitTmDis, enemy_info[2]['lives'], cooldown) * int(power != 0) 
     
     e1Dis = min(getDistance(e1x, e1y, x, y) + int(enemy_info[0]['lives'] == 0) * 1300, 1300)
     e2Dis = min(getDistance(e2x, e2y, x, y) + int(enemy_info[1]['lives'] == 0) * 1300, 1300)
@@ -93,7 +94,39 @@ def isAimToYou(selfX, selfY, gunAngle, targetX, targetY, teamMateShootDis, lives
 
 
 
+def seeTarget(x, y, targetX, targetY, graph):
+    enemyWayX, enemyWayY = PosNag(targetX - x), -PosNag(targetY - y)
+    wall_x, wall_y = int(x / 25) + enemyWayX, int(y / 25) + enemyWayY
 
+    targetAngle = getTargetAngle(x, y, targetX, targetY, getDistance(x, y, targetX, targetY))
+    if (Shoot(x, y, targetAngle, targetX, targetY, 100) == "SHOOT"):#用有沒有瞄準到判斷
+        return True
+    
 
+    seeEnemy = True
 
+    if (enemyWayX != 0 and enemyWayY != 0):
+        while (wall_x != int(targetX / 25) and wall_x >= 0 and wall_x < 40):
+            while (wall_y != int(targetY / 25) and wall_y >= 0 and wall_y < 24):
+                if (int(graph[wall_y, wall_x]) > 0):
+                    seeEnemy = False
+                    break
+                wall_y += enemyWayY
+            if (not seeEnemy): break
+                
+            wall_x += enemyWayX
+        return seeEnemy
 
+    return False
+
+def seeEnemy(data, graph):
+    x, y, _, _ = getTank(data)
+
+    for enemy in data["competitor_info"]:
+        enemyAngle = (enemy['angle'] + 540) % 360
+        enemyX, enemyY = enemy['x'] + 12.5 - 5 * int(enemyAngle % 90 != 0), enemy['y'] + 12.5 - 5 * int(enemyAngle % 90 != 0)
+        enemyDis = getDistance(x, y, enemyX, enemyY)
+        if (seeTarget(x, y, enemyX, enemyY, graph) and enemyDis <= 300):
+            return True
+
+    return False
