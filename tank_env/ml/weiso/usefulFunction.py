@@ -251,7 +251,6 @@ def turnToAngle(tankAngle, TargetAngle):
     tankAngle != TargetAngle
     """
     targetAngleGap = (tankAngle - TargetAngle + 360) % 360
-
     if (targetAngleGap == 0):
         return "FORWARD"
     
@@ -267,5 +266,14 @@ def goTarget(x, y, targetX, targetY, angle, graph, nowCheckPoint):
         return goTargetDirect(x, y, targetX, targetY, angle, model)
     else:
         cpX, cpY, model = getTargetCP(x, y, targetX, targetY, nowCheckPoint, graph)
-
+        if (cpX == 0):
+            return "NONE"
         return goTargetDirect(x, y, cpX, cpY, angle, model)
+    
+
+def goOtherSide(x, y, angle, graph, nowCheckPoint, otherCheckPoint):
+    for targetX, targetY in otherCheckPoint:
+        action = goTarget(x, y, targetX, targetY, angle, graph, nowCheckPoint)
+        if (action != "NONE"):
+            return action
+    return "NONE"
