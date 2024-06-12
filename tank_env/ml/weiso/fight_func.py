@@ -138,6 +138,17 @@ def seeEnemy(data, graph):
 
     return False
 
+def enemySameSide(data):
+    x, y, _, _ = getTank(data)
+    targetX, targetY = -1000, -1000
+    for enemy in data["competitor_info"]:
+        enemyAngle = (enemy['angle'] + 540) % 360
+        enemyX = enemy['x'] + 12.5 - 5 * int(enemyAngle % 90 != 0)
+        if (((x > 500 and enemyX > 500) or (x <= 500 and enemyX <= 500)) and \
+            getDistance(enemyX, enemyX, x, y) < getDistance(targetX, targetY, x, y)):
+            targetX, targetY = enemyX, enemyX
+    return targetX, targetY
+
 def getBullet(data : dict, bullet_history : dict, graph : np.ndarray):
     bullet_info = data["bullets_info"]
 

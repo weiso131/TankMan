@@ -228,23 +228,19 @@ def goTargetDirect(x, y, targetX, targetY, angle, model):
     yDis = abs(graphTargetY - graphY)
 
     if (model == 1): 
-        return xFirstWalk(xDis, yDis, xAngle, yAngle, angle)
+        return xFirstWalk(xDis, xAngle, yAngle, angle)
     else:
-        return yFirstWalk(xDis, yDis, xAngle, yAngle, angle)
+        return yFirstWalk(yDis, xAngle, yAngle, angle)
 
-def xFirstWalk(xDis, yDis, xAngle, yAngle, angle):
-    if (xDis == 0 and yDis == 0):
-        return random.choice(["FORWARD", "BACKWARD", "TURN_RIGHT", "TURN_LEFT"])
-    elif (xAngle != angle and xDis != 0):
+def xFirstWalk(xDis, xAngle, yAngle, angle):
+    if (xAngle != angle and xDis != 0):
         return turnToAngle(angle, xAngle)
     elif(xDis == 0 and yAngle != angle):
         return turnToAngle(angle, yAngle)
     else:
         return "FORWARD"
-def yFirstWalk(xDis, yDis, xAngle, yAngle, angle):
-    if (xDis == 0 and yDis == 0):
-        return random.choice(["FORWARD", "BACKWARD", "TURN_RIGHT", "TURN_LEFT"])
-    elif (yAngle != angle and yDis != 0):
+def yFirstWalk(yDis, xAngle, yAngle, angle):
+    if (yAngle != angle and yDis != 0):
         return turnToAngle(angle, yAngle)
     elif(yDis == 0 and xAngle != angle):
         return turnToAngle(angle, xAngle)
@@ -271,4 +267,5 @@ def goTarget(x, y, targetX, targetY, angle, graph, nowCheckPoint):
         return goTargetDirect(x, y, targetX, targetY, angle, model)
     else:
         cpX, cpY, model = getTargetCP(x, y, targetX, targetY, nowCheckPoint, graph)
+
         return goTargetDirect(x, y, cpX, cpY, angle, model)
